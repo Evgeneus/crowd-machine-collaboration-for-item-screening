@@ -2,7 +2,6 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.naive_bayes import BernoulliNB, MultinomialNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.neural_network import MLPClassifier
 from sklearn import metrics
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
@@ -12,10 +11,8 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import BaggingClassifier
 from sklearn.svm import SVC
 import numpy as np
-import random
 import csv
-from crowd_main import *
-from helpers.utils import compute_measures
+from realdata_experiment.crowd_main import *
 from itertools import combinations
 import random
 
@@ -23,8 +20,8 @@ import random
 
 def _load_data(path):
     texts, labels, pmids = [], [], []
-    csv_reader = csv.reader(open(path, 'rb'))
-    csv_reader.next()  # skip headers
+    csv_reader = csv.reader(open(path, 'r'))
+    next(csv_reader)  # skip headers
     for r in csv_reader:
         pmid, label, text = r
         texts.append(text)
@@ -70,7 +67,7 @@ def machineRun(balancing):
     result = []
 
     # Machine 1 DummyClassifier
-    print 'DummyClassifier_stratified'
+    print ('DummyClassifier_stratified')
     Random_classifier = DummyClassifier(strategy='stratified', random_state=42).fit(X_train, y_train)
     y_pred = Random_classifier.predict(X_test)
     classifiers['0'] = y_pred
@@ -81,15 +78,15 @@ def machineRun(balancing):
     f1score = metrics.f1_score(y_test, y_pred, average='macro')
     roc = metrics.roc_auc_score(y_test, y_pred)
     result.append(['DumClassifierStratified', accuracy_train, accuracy_test, f1score, roc, precision, recall])
-    print 'accuracy_train:' + str(accuracy_train)
-    print 'accuracy_test:' + str(accuracy_test)
-    print 'f1score:' + str(f1score)
-    print 'roc_auc_score:' + str(roc)
-    print 'recall:' + str(recall)
-    print 'precision:' + str(precision)
+    print ('accuracy_train:' + str(accuracy_train))
+    print ('accuracy_test:' + str(accuracy_test))
+    print ('f1score:' + str(f1score))
+    print ('roc_auc_score:' + str(roc))
+    print ('recall:' + str(recall))
+    print ('precision:' + str(precision))
 
     # Machine 1 DummyClassifier
-    print 'DummyClassifier_stratified'
+    print ('DummyClassifier_stratified')
     Random1_classifier = DummyClassifier(strategy='most_frequent', random_state=42).fit(X_train, y_train)
     y_pred = Random1_classifier.predict(X_test)
     classifiers['1'] = y_pred
@@ -100,15 +97,15 @@ def machineRun(balancing):
     f1score = metrics.f1_score(y_test, y_pred, average='macro')
     roc = metrics.roc_auc_score(y_test, y_pred)
     result.append(['DumClassifierMostfrequent', accuracy_train, accuracy_test, f1score, roc, precision, recall])
-    print 'accuracy_train:' + str(accuracy_train)
-    print 'accuracy_test:' + str(accuracy_test)
-    print 'f1score:' + str(f1score)
-    print 'roc_auc_score:' + str(roc)
-    print 'recall:' + str(recall)
-    print 'precision:' + str(precision)
+    print ('accuracy_train:' + str(accuracy_train))
+    print ('accuracy_test:' + str(accuracy_test))
+    print ('f1score:' + str(f1score))
+    print ('roc_auc_score:' + str(roc))
+    print ('recall:' + str(recall))
+    print ('precision:' + str(precision))
 
     # Machine 1 NaiveBase
-    print 'Machine 1 MultinomialNaiveBase'
+    print ('Machine 1 MultinomialNaiveBase')
     gs_NaiveBase_clf = MultinomialNB().fit(X_train, y_train)
     y_pred = gs_NaiveBase_clf.predict(X_test)
     classifiers['2'] = y_pred
@@ -119,15 +116,15 @@ def machineRun(balancing):
     f1score = metrics.f1_score(y_test, y_pred, average='macro')
     roc = metrics.roc_auc_score(y_test, y_pred)
     result.append(['MultinomialNB', accuracy_train, accuracy_test, f1score, roc, precision, recall])
-    print 'accuracy_train:' + str(accuracy_train)
-    print 'accuracy_test:' + str(accuracy_test)
-    print 'f1score:' + str(f1score)
-    print 'roc_auc_score:' + str(roc)
-    print 'recall:' + str(recall)
-    print 'precision:' + str(precision)
+    print ('accuracy_train:' + str(accuracy_train))
+    print ('accuracy_test:' + str(accuracy_test))
+    print ('f1score:' + str(f1score))
+    print ('roc_auc_score:' + str(roc))
+    print ('recall:' + str(recall))
+    print ('precision:' + str(precision))
 
     # Machine 1 BeNaiveBase
-    print 'Machine 1 BernoulliNB'
+    print ('Machine 1 BernoulliNB')
     gs_NaiveBase_clf = BernoulliNB().fit(X_train, y_train)
     y_pred = gs_NaiveBase_clf.predict(X_test)
     classifiers['3'] = y_pred
@@ -138,15 +135,15 @@ def machineRun(balancing):
     f1score = metrics.f1_score(y_test, y_pred, average='macro')
     roc = metrics.roc_auc_score(y_test, y_pred)
     result.append(['BernoulliNB', accuracy_train, accuracy_test, f1score, roc, precision, recall])
-    print 'accuracy_train:' + str(accuracy_train)
-    print 'accuracy_test:' + str(accuracy_test)
-    print 'f1score:' + str(f1score)
-    print 'roc_auc_score:' + str(roc)
-    print 'recall:' + str(recall)
-    print 'precision:' + str(precision)
+    print ('accuracy_train:' + str(accuracy_train))
+    print ('accuracy_test:' + str(accuracy_test))
+    print ('f1score:' + str(f1score))
+    print ('roc_auc_score:' + str(roc))
+    print ('recall:' + str(recall))
+    print ('precision:' + str(precision))
 
     # Machine 2 SGD Norm2
-    print 'Machine 2 SGD'
+    print ('Machine 2 SGD')
     params_d = {"alpha": 10.0 ** -np.arange(1, 7)}
     sgd = SGDClassifier(class_weight={1: 2}, random_state=42, penalty='l2')
     clfsgd = GridSearchCV(sgd, params_d, scoring='roc_auc', cv=3)
@@ -160,15 +157,15 @@ def machineRun(balancing):
     f1score = metrics.f1_score(y_test, y_pred, average='macro')
     roc = metrics.roc_auc_score(y_test, y_pred)
     result.append(['SGDl2{1:2}', accuracy_train, accuracy_test, f1score, roc, precision, recall])
-    print 'accuracy_train:' + str(accuracy_train)
-    print 'accuracy_test:' + str(accuracy_test)
-    print 'f1score:' + str(f1score)
-    print 'roc_auc_score:' + str(roc)
-    print 'recall:' + str(recall)
-    print 'precision:' + str(precision)
+    print ('accuracy_train:' + str(accuracy_train))
+    print ('accuracy_test:' + str(accuracy_test))
+    print ('f1score:' + str(f1score))
+    print ('roc_auc_score:' + str(roc))
+    print ('recall:' + str(recall))
+    print ('precision:' + str(precision))
 
     # Machine 2 SGD Norm1
-    print 'Machine 3 SGD'
+    print ('Machine 3 SGD')
     sgd = SGDClassifier(class_weight={1: 1}, random_state=42, penalty='l1')
     clfsgd = GridSearchCV(sgd, params_d, scoring='roc_auc', cv=3)
     clfsgd = clfsgd.fit(X_train, y_train)
@@ -181,16 +178,16 @@ def machineRun(balancing):
     f1score = metrics.f1_score(y_test, y_pred, average='macro')
     roc = metrics.roc_auc_score(y_test, y_pred)
     result.append(['SGDl1{1:1}', accuracy_train, accuracy_test, f1score, roc, precision, recall])
-    print 'accuracy_train:' + str(accuracy_train)
-    print 'accuracy_test:' + str(accuracy_test)
-    print 'f1score:' + str(f1score)
-    print 'roc_auc_score:' + str(roc)
-    print 'recall:' + str(recall)
-    print 'precision:' + str(precision)
+    print ('accuracy_train:' + str(accuracy_train))
+    print ('accuracy_test:' + str(accuracy_test))
+    print ('f1score:' + str(f1score))
+    print ('roc_auc_score:' + str(roc))
+    print ('recall:' + str(recall))
+    print ('precision:' + str(precision))
 
     # Machine 3 RandomForrest
 
-    print 'Machine 4 RandomForrest'
+    print ('Machine 4 RandomForrest')
     RF_clf = RandomForestClassifier(class_weight={1: 5}, random_state=42)
     parameters_RF = {
         'n_estimators': [300],  # 300 is enough
@@ -199,7 +196,7 @@ def machineRun(balancing):
 
     gs_RF_clf = GridSearchCV(RF_clf, parameters_RF, n_jobs=-1, scoring='roc_auc', cv=3)
     gs_RF_clf = gs_RF_clf.fit(X_train, y_train)
-    print 'RF fitted!'
+    print ('RF fitted!')
     y_pred = gs_RF_clf.predict(X_test)
     classifiers['6'] = y_pred
     accuracy_train = gs_RF_clf.score(X_train, y_train)
@@ -209,15 +206,15 @@ def machineRun(balancing):
     precision = metrics.precision_score(y_test, y_pred)
     recall = metrics.recall_score(y_test, y_pred)
     result.append(['RF{1:5}', accuracy_train, accuracy_test, f1score, roc, precision, recall])
-    print 'accuracy_train:' + str(accuracy_train)
-    print 'accuracy_test:' + str(accuracy_test)
-    print 'f1score:' + str(f1score)
-    print 'roc_auc_score:' + str(roc)
-    print 'recall:' + str(recall)
-    print 'precision:' + str(precision)
+    print ('accuracy_train:' + str(accuracy_train))
+    print ('accuracy_test:' + str(accuracy_test))
+    print ('f1score:' + str(f1score))
+    print ('roc_auc_score:' + str(roc))
+    print ('recall:' + str(recall))
+    print ('precision:' + str(precision))
     #
     # Machine 4 KNN
-    print 'Machine 5 KNN'
+    print ('Machine 5 KNN')
     knn_clf = KNeighborsClassifier(weights='uniform')
 
     parameters_knn = {
@@ -233,15 +230,15 @@ def machineRun(balancing):
     f1score = metrics.f1_score(y_test, y_pred)
     roc = metrics.roc_auc_score(y_test, y_pred)
     result.append(['KNN', accuracy_train, accuracy_test, f1score, roc, precision, recall])
-    print 'accuracy_train:' + str(accuracy_train)
-    print 'accuracy_test:' + str(accuracy_test)
-    print 'f1score:' + str(f1score)
-    print 'roc_auc_score:' + str(roc)
-    print 'recall:' + str(recall)
-    print 'precision:' + str(precision)
+    print ('accuracy_train:' + str(accuracy_train))
+    print ('accuracy_test:' + str(accuracy_test))
+    print ('f1score:' + str(f1score))
+    print ('roc_auc_score:' + str(roc))
+    print ('recall:' + str(recall))
+    print ('precision:' + str(precision))
     # #
     # # Machine 4 GB
-    print 'Machine 6 GB'
+    print ('Machine 6 GB')
     GB_clf = GradientBoostingClassifier(random_state=42, max_features=0.1)
 
     parameters_GB = {
@@ -252,7 +249,7 @@ def machineRun(balancing):
 
     gb_clf = GridSearchCV(GB_clf, parameters_GB, scoring='roc_auc', n_jobs=-1, cv=3)
     gb_clf = gb_clf.fit(X_train, y_train)
-    print 'GB fitted!'
+    print ('GB fitted!')
     y_pred = gb_clf.predict(X_test)
     classifiers['7'] = y_pred
     accuracy_train = gb_clf.score(X_train, y_train)
@@ -262,23 +259,23 @@ def machineRun(balancing):
     f1score = metrics.f1_score(y_test, y_pred, average='macro')
     roc = metrics.roc_auc_score(y_test, y_pred)
     result.append(['GB', accuracy_train, accuracy_test, f1score, roc, precision, recall])
-    print 'accuracy_train:' + str(accuracy_train)
-    print 'accuracy_test:' + str(accuracy_test)
-    print 'f1score:' + str(f1score)
-    print 'roc_auc_score:' + str(roc)
-    print 'recall:' + str(recall)
-    print 'precision:' + str(precision)
+    print ('accuracy_train:' + str(accuracy_train))
+    print ('accuracy_test:' + str(accuracy_test))
+    print ('f1score:' + str(f1score))
+    print ('roc_auc_score:' + str(roc))
+    print ('recall:' + str(recall))
+    print ('precision:' + str(precision))
 
     # Machine 4 GB
 
 
-    print 'Machine 6 baggingWithSVC'
+    print ('Machine 6 baggingWithSVC')
     n_estimators = 10
     SVC_clf = BaggingClassifier(base_estimator=SVC(kernel='linear', class_weight={1: 10}), n_estimators=n_estimators,
                                 max_samples=1.0 / n_estimators, random_state=42, max_features=0.3)
 
     SVC_clf = SVC_clf.fit(X_train, y_train)
-    print 'baggingWithSVC fitted!'
+    print ('baggingWithSVC fitted!')
 
     y_pred = SVC_clf.predict(X_test)
     classifiers['8'] = y_pred
@@ -289,13 +286,13 @@ def machineRun(balancing):
     precision = metrics.precision_score(y_test, y_pred)
     recall = metrics.recall_score(y_test, y_pred)
     result.append(['SVCBagging{1:10}', accuracy_train, accuracy_test, f1score, roc, precision, recall])
-    print 'accuracy_train:' + str(accuracy_train)
-    print 'accuracy_test:' + str(accuracy_test)
-    print 'f1score:' + str(f1score)
-    print 'roc_auc_score:' + str(roc)
-    print 'recall:' + str(recall)
-    print 'precision:' + str(precision)
-    print '*******************************'
+    print ('accuracy_train:' + str(accuracy_train))
+    print ('accuracy_test:' + str(accuracy_test))
+    print ('f1score:' + str(f1score))
+    print ('roc_auc_score:' + str(roc))
+    print ('recall:' + str(recall))
+    print ('precision:' + str(precision))
+    print ('*******************************')
 
     return result, classifiers, y_test
 
@@ -303,7 +300,7 @@ def machineRun(balancing):
 def correlation(classifiers, y_true):
     correlation_result = {}
     machine_combinations = []
-    for i in xrange(2, 3):
+    for i in range(2, 3):
         machine_combinations.append(list(combinations(classifiers.keys(), i)))  # combination of classifier
     for mac_combination in machine_combinations:
         for dual_combination in mac_combination:
