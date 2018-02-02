@@ -1,8 +1,5 @@
-import random
-
 from collections import defaultdict
-import pandas as pd
-from collections import Counter
+
 
 class CrowdVoting:
 
