@@ -1,4 +1,4 @@
-from crowd_voting import CrowdVoting
+from realdata_experiment.crowd_voting import CrowdVoting
 
 
 def crowd_main(criteria):
