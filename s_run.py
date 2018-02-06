@@ -1,5 +1,5 @@
 from generator import generate_responses_gt
-from helpers.method_2 import classify_papers_baseline, generate_responses, \
+from helpers.s_run_utils import classify_papers_baseline, generate_responses, \
     update_v_count, assign_criteria, classify_papers, update_cr_power
 from helpers.utils import compute_metrics, estimate_cr_power_dif
 from fusion_algorithms.algorithms_utils import input_adapter

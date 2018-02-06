@@ -3,7 +3,7 @@ import pandas as pd
 
 from generator import generate_responses_gt
 from helpers.utils import run_quiz_criteria_confm
-from sm_run import sm_run
+from s_run import s_run
 from machine_ensemble import machine_ensemble
 from hybrid_classifier import hybrid_classifier
 
@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
                 # sm-run
                 loss_smrun, cost_smrun, fp_rate_sm, tp_rate_sm, \
-                rec_sm_, pre_sm_, f_beta_sm = sm_run(criteria_num, n_papers, papers_page, J, lr, Nt, acc,
+                rec_sm_, pre_sm_, f_beta_sm = s_run(criteria_num, n_papers, papers_page, J, lr, Nt, acc,
                                                      criteria_power, criteria_difficulty, GT, fr_p_part)
                 loss_smrun_list.append(loss_smrun)
                 cost_smrun_list.append(cost_smrun)
@@ -111,7 +111,7 @@ if __name__ == '__main__':
                          np.mean(cost_smrun_list), np.std(cost_smrun_list), 'Crowd-Ensemble',
                          np.mean(rec_sm), np.mean(pre_sm), np.mean(f_sm), tests_num, corr,
                          machine_selec_conf, baseline_items, n_papers])
-    pd.DataFrame(data, columns=['Nt', 'J', 'lr', 'loss_mean', 'loss_std',
-                                'price_mean', 'price_std', 'alg', 'recall', 'precision',
-                                'f_beta', 'tests_num', 'corr', 'machine_selec_conf', 'baseline_items',
-                                'total_items']).to_csv('output/data/fig6_machine_selec_conf.csv', index=False)
+    # pd.DataFrame(data, columns=['Nt', 'J', 'lr', 'loss_mean', 'loss_std',
+    #                             'price_mean', 'price_std', 'alg', 'recall', 'precision',
+    #                             'f_beta', 'tests_num', 'corr', 'machine_selec_conf', 'baseline_items',
+    #                             'total_items']).to_csv('output/data/fig6_machine_selec_conf.csv', index=False)
