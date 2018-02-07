@@ -16,7 +16,6 @@ def run_quiz_criteria_confm(quiz_papers_n, cheaters_prop, criteria_difficulty):
 
 
 def compute_metrics(classified_papers, GT, lr, criteria_num):
-    # lr = 5
     # obtain GT scope values for papers
     GT_scope = []
     for paper_id in range(len(classified_papers)):
@@ -24,26 +23,26 @@ def compute_metrics(classified_papers, GT, lr, criteria_num):
             GT_scope.append(0)
         else:
             GT_scope.append(1)
-    # FP == False Exclusion
-    # FN == False Inclusion
+    # Positive == Inclusion (Relevant)
+    # N == Exclusion (Not relevant)
     fp = 0.
     fn = 0.
     tp = 0.
     tn = 0.
     for cl_val, gt_val in zip(classified_papers, GT_scope):
         if gt_val and not cl_val:
-            fp += 1
-        if not gt_val and cl_val:
             fn += 1
+        if not gt_val and cl_val:
+            fp += 1
         if gt_val and cl_val:
-            tn += 1
-        if not gt_val and not cl_val:
             tp += 1
+        if not gt_val and not cl_val:
+            tn += 1
     tp_rate = tp / (fn + tp)
     fp_rate = fp / (fp + tn)
     recall = tp / (tp + fn)
     precision = tp / (tp + fp)
-    loss = (fp * lr + fn) / len(classified_papers)
+    loss = (fn * lr + fp) / len(classified_papers)
     beta = 1. / lr
     f_beta = (beta + 1) * precision * recall / (beta * recall + precision)
     return loss, fp_rate, tp_rate, recall, precision, f_beta

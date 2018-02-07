@@ -57,14 +57,14 @@ def classify_items(ensembled_votes, lr, filters_num, items_num):
     # pos_thr = lr / (1. + lr)  # threshold to classify as a positive
     pos_thr = 0.99  # threshold to classify as a positive
     for item_index in range(items_num):
-        prob_all_neg = 1.
+        prob_all_not_apply = 1.
         for filter_index in range(filters_num):
-            prob_all_neg *= ensembled_votes[item_index*filters_num + filter_index]
-        prob_item_pos = 1. - prob_all_neg
-        prob_in_list.append(prob_item_pos)
+            prob_all_not_apply *= ensembled_votes[item_index*filters_num + filter_index]
+        prob_item_out = 1. - prob_all_not_apply
+        prob_in_list.append(prob_all_not_apply)
 
         # classify item
-        if prob_item_pos > pos_thr:
+        if prob_item_out > pos_thr:
             items_labels.append(0)
         else:
             items_labels.append(1)
