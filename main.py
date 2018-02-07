@@ -34,45 +34,45 @@ if __name__ == '__main__':
                       ' select_conf: {}, expert_vote_cost: {}'.
                       format(corr, tests_num, baseline_items, lr, select_conf, expert_cost))
                 loss_me_list = []
-                fp_me, tp_me, rec_me, pre_me, f_me, f_me = [], [], [], [], [], []
+                rec_me, pre_me, f_me, f_me = [], [], [], []
 
                 loss_smrun_list = []
                 cost_smrun_list = []
-                fp_sm, tp_sm, rec_sm, pre_sm, f_sm, f_sm = [], [], [], [], [], []
-
+                rec_sm, pre_sm, f_sm, f_sm = [], [], [], []
                 loss_h_list = []
                 cost_h_list = []
-                fp_h, tp_h, rec_h, pre_h, f_h, f_h = [], [], [], [], [], []
-                for _ in range(10):
+                rec_h, pre_h, f_h, f_h = [], [], [], []
+
+                params = {
+                    'criteria_num': criteria_num,
+                    'n_papers': n_papers,
+                    'papers_page': papers_page,
+                    'criteria_power': criteria_power,
+                    'criteria_difficulty': criteria_difficulty,
+                    'fr_p_part': fr_p_part,
+                    'J': J,
+                    'Nt': Nt,
+                    'lr': lr,
+                    'corr': corr,
+                    'tests_num': tests_num,
+                    'select_conf': select_conf,
+                    'expert_cost': expert_cost
+                }
+
+                for _ in range(50):
                     # quiz, generation responses
                     workers_accuracy = run_quiz_criteria_confm(Nt, z, [1.])
                     responses, ground_truth = generate_responses_gt(n_papers, criteria_power, papers_page,
                                                           J, workers_accuracy, criteria_difficulty)
-                    
-                    params = {
-                        'criteria_num': criteria_num,
-                        'n_papers': n_papers,
-                        'papers_page': papers_page,
+
+                    params.update({
                         'ground_truth': ground_truth,
-                        'workers_accuracy': workers_accuracy,
-                        'criteria_power': criteria_power,
-                        'criteria_difficulty': criteria_difficulty,
-                        'fr_p_part': fr_p_part,
-                        'J': J,
-                        'Nt': Nt,
-                        'lr': lr,
-                        'corr': corr,
-                        'tests_num': tests_num,
-                        'select_conf': select_conf,
-                        'expert_cost': expert_cost
-                    }
+                        'workers_accuracy': workers_accuracy
+                    })
 
                     # machine ensemble
-                    loss_me, fp_rate_me, tp_rate_me, \
-                    rec_me_, pre_me_, f_beta_me, prior_prob_in = machine_ensemble(params)
+                    loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_in = machine_ensemble(params)
                     loss_me_list.append(loss_me)
-                    fp_me.append(fp_rate_me)
-                    tp_me.append(tp_rate_me)
                     rec_me.append(rec_me_)
                     pre_me.append(pre_me_)
                     f_me.append(f_beta_me)
@@ -80,57 +80,53 @@ if __name__ == '__main__':
                     # s-run with machine prior
                     params['prior_prob_in'] = prior_prob_in
 
-                    loss_h, cost_h, fp_rate_h, tp_rate_h, \
-                    rec_h_, pre_h_, f_beta_h = s_run_algorithm(params)
+                    loss_h, cost_h, rec_h_, pre_h_, f_beta_h = s_run_algorithm(params)
                     loss_h_list.append(loss_h)
                     cost_h_list.append(cost_h)
-                    fp_h.append(fp_rate_h)
-                    tp_h.append(tp_rate_h)
                     rec_h.append(rec_h_)
                     pre_h.append(pre_h_)
                     f_h.append(f_beta_h)
 
                     # s-run
-                    loss_smrun, cost_smrun, fp_rate_sm, tp_rate_sm, \
-                    rec_sm_, pre_sm_, f_beta_sm = s_run_algorithm(params)
+                    loss_smrun, cost_smrun, rec_sm_, pre_sm_, f_beta_sm = s_run_algorithm(params)
                     loss_smrun_list.append(loss_smrun)
                     cost_smrun_list.append(cost_smrun)
-                    fp_sm.append(fp_rate_sm)
-                    tp_sm.append(tp_rate_sm)
                     rec_sm.append(rec_sm_)
                     pre_sm.append(pre_sm_)
                     f_sm.append(f_beta_sm)
 
                 # print results
                 print('ME-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' \
-                      'recall: {:1.2f}, precision: {:1.3f}, prec_std: {:1.3f}, f_b: {}'. \
+                      'recall: {:1.2f}, rec_std: {:1.3f}, precision: {:1.3f}, f_b: {}'. \
                       format(np.mean(loss_me_list), np.std(loss_me_list),
-                             np.mean(rec_me), np.mean(pre_me), np.std(pre_me), np.mean(f_me)))
+                             np.mean(rec_me), np.std(rec_me), np.mean(pre_me), np.mean(f_me)))
 
-                print('SM-RUN    loss: {:1.3f}, loss_std: {:1.3f}, price: {:1.2f}, ' \
-                      'recall: {:1.2f}, precision: {:1.3f}, prec_std: {:1.3f}, f_b: {}'. \
-                      format(np.mean(loss_smrun_list), np.std(loss_smrun_list), np.mean(cost_smrun_list),
-                             np.mean(rec_sm), np.mean(pre_sm), np.std(pre_sm), np.mean(f_sm)))
+                print('SM-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+                      'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
+                      .format(np.mean(loss_smrun_list), np.std(loss_smrun_list), np.mean(rec_sm),
+                              np.std(rec_sm), np.mean(cost_smrun_list), np.std(cost_smrun_list),
+                              np.mean(pre_sm), np.mean(f_sm)))
 
-                print('H-RUN    loss: {:1.3f}, loss_std: {:1.3f},  price: {:1.2f}, ' \
-                      'recall: {:1.2f}, precision: {:1.3f}, prec_std: {:1.3f}, f_b: {}'. \
-                      format(np.mean(loss_h_list), np.std(loss_h_list), np.mean(cost_h_list),
-                             np.mean(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h)))
+                print('H-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+                      'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
+                      .format(np.mean(loss_h_list), np.std(loss_h_list), np.mean(rec_h), np.std(rec_h),
+                              np.mean(cost_h_list), np.std(cost_h_list), np.mean(pre_h), np.mean(f_h)))
                 print('---------------------')
 
-                data.append([Nt, J, lr, np.mean(loss_me_list), np.std(loss_me_list),
-                             0., 0., 'Machines-Ensemble', np.mean(rec_me), np.mean(pre_me),
-                             np.mean(f_me), tests_num, corr, select_conf, baseline_items,
-                             n_papers, expert_cost])
+                data.append([Nt, J, lr, np.mean(loss_me_list), np.std(loss_me_list), 0., 0., 'Machines-Ensemble',
+                             np.mean(rec_me), np.std(rec_me), np.mean(pre_me), np.std(pre_me), np.mean(f_me),
+                             np.std(f_me), tests_num, corr, select_conf, baseline_items, n_papers, expert_cost])
                 data.append([Nt, J, lr, np.mean(loss_h_list), np.std(loss_h_list),
-                             np.mean(cost_h_list), np.std(cost_h_list), 'Hybrid-Ensemble',
-                             np.mean(rec_h), np.mean(pre_h), np.mean(f_h), tests_num, corr,
-                             select_conf, baseline_items, n_papers, expert_cost])
+                             np.mean(cost_h_list), np.std(cost_h_list), 'Hybrid-Ensemble', np.mean(rec_h),
+                             np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
+                             tests_num, corr, select_conf, baseline_items, n_papers, expert_cost])
                 data.append([Nt, J, lr, np.mean(loss_smrun_list), np.std(loss_smrun_list),
-                             np.mean(cost_smrun_list), np.std(cost_smrun_list), 'Crowd-Ensemble',
-                             np.mean(rec_sm), np.mean(pre_sm), np.mean(f_sm), tests_num, corr,
-                             select_conf, baseline_items, n_papers, expert_cost])
-    # pd.DataFrame(data, columns=['Nt', 'J', 'lr', 'loss_mean', 'loss_std',
-    #                             'price_mean', 'price_std', 'alg', 'recall', 'precision',
-    #                             'f_beta', 'tests_num', 'corr', 'select_conf', 'baseline_items',
-    #                             'total_items', 'expert_vote_cost']).to_csv('output/data/fig11_fixed_machines_experts_fi_cost.csv', index=False)
+                             np.mean(cost_smrun_list), np.std(cost_smrun_list), 'Crowd-Ensemble', np.mean(rec_sm),
+                             np.std(rec_sm), np.mean(pre_sm), np.std(pre_sm), np.mean(f_sm), np.std(f_sm),
+                             tests_num, corr, select_conf, baseline_items, n_papers, expert_cost])
+    pd.DataFrame(data,
+                 columns=['Nt', 'J', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
+                          'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
+                          'f_beta', 'f_beta_std', 'tests_num', 'corr', 'select_conf', 'baseline_items',
+                          'total_items', 'expert_cost']
+                 ).to_csv('output/data/fig0_base_settings.csv', index=False)

@@ -24,7 +24,7 @@ def compute_metrics(classified_papers, GT, lr, criteria_num):
         else:
             GT_scope.append(1)
     # Positive == Inclusion (Relevant)
-    # N == Exclusion (Not relevant)
+    # Negative == Exclusion (Not relevant)
     fp = 0.
     fn = 0.
     tp = 0.
@@ -38,14 +38,12 @@ def compute_metrics(classified_papers, GT, lr, criteria_num):
             tp += 1
         if not gt_val and not cl_val:
             tn += 1
-    tp_rate = tp / (fn + tp)
-    fp_rate = fp / (fp + tn)
-    recall = tp / (tp + fn)
-    precision = tp / (tp + fp)
+    recall = 100 * tp / (tp + fn)
+    precision = 100 * tp / (tp + fp)
     loss = (fn * lr + fp) / len(classified_papers)
     beta = 1. / lr
-    f_beta = (beta + 1) * precision * recall / (beta * recall + precision)
-    return loss, fp_rate, tp_rate, recall, precision, f_beta, fp
+    f_beta = 100 * (beta + 1) * precision * recall / (beta * recall + precision)
+    return loss, recall, precision, f_beta, fp
 
 
 def classify_papers(n_papers, criteria_num, responses, papers_page, J, lr):

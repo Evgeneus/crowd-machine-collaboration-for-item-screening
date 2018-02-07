@@ -112,6 +112,6 @@ def s_run_algorithm(params):
 
         classified_papers.update(classified_p_round)
     classified_papers = [classified_papers[p_id] for p_id in sorted(classified_papers.keys())]
-    loss, fp_rate, fn_rate, recall, precision, f_beta, fp = compute_metrics(classified_papers, ground_truth, lr, criteria_num)
+    loss, recall, precision, f_beta, fp = compute_metrics(classified_papers, ground_truth, lr, criteria_num)
     price_per_paper = (criteria_count + fp * expert_cost) / n_papers
-    return loss, price_per_paper, fp_rate, fn_rate, recall, precision, f_beta
+    return loss, price_per_paper, recall, precision, f_beta

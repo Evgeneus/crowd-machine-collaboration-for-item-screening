@@ -137,6 +137,6 @@ def machine_ensemble(params):
     # ensemble votes for each filter and item
     ensembled_votes_in = weighted_mv(votes_list, filters_num, items_num, machines_accuracy)
     items_labels, prob_in_list = classify_items(ensembled_votes_in, lr, filters_num, items_num)
-    loss, fp_rate, fn_rate, recall, precision, f_beta = compute_metrics(items_labels, ground_truth, lr, filters_num)[:-1]
-    return loss, fp_rate, fn_rate, recall, precision, f_beta, ensembled_votes_in
+    loss, recall, precision, f_beta, _ = compute_metrics(items_labels, ground_truth, lr, filters_num)
+    return loss, recall, precision, f_beta, ensembled_votes_in
 
