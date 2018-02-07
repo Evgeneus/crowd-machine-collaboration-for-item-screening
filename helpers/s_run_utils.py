@@ -40,7 +40,7 @@ def assign_criteria(papers_ids, criteria_num, values_count, power_cr_list, acc_c
         joint_prob = joint_prob_votes_out[cr_assign]
 
         # check stopping condition
-        if n_min / joint_prob >= 10:
+        if n_min / joint_prob >= 15:
             in_papers_ids.append(p_id)
         else:
             cr_assigned.append(cr_assign)
