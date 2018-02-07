@@ -45,7 +45,7 @@ def compute_metrics(classified_papers, GT, lr, criteria_num):
     loss = (fn * lr + fp) / len(classified_papers)
     beta = 1. / lr
     f_beta = (beta + 1) * precision * recall / (beta * recall + precision)
-    return loss, fp_rate, tp_rate, recall, precision, f_beta
+    return loss, fp_rate, tp_rate, recall, precision, f_beta, fp
 
 
 def classify_papers(n_papers, criteria_num, responses, papers_page, J, lr):

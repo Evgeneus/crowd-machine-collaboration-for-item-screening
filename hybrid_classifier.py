@@ -48,7 +48,8 @@ def do_round(GT, papers_ids, criteria_num, papers_worker, acc, criteria_difficul
 
 
 def hybrid_classifier(criteria_num, n_papers, papers_worker, J, lr, Nt, acc,
-                      criteria_power, criteria_difficulty, GT, fr_p_part, prior_prob_in):
+                      criteria_power, criteria_difficulty, GT, fr_p_part,
+                      prior_prob_in, expert_vote_cost):
 
     # initialization
     p_thrs = 0.99
@@ -98,6 +99,7 @@ def hybrid_classifier(criteria_num, n_papers, papers_worker, J, lr, Nt, acc,
 
         classified_papers.update(classified_p_round)
     classified_papers = [classified_papers[p_id] for p_id in sorted(classified_papers.keys())]
-    loss, fp_rate, fn_rate, recall, precision, f_beta = compute_metrics(classified_papers, GT, lr, criteria_num)
-    price_per_paper = criteria_count / n_papers
+    loss, fp_rate, fn_rate, recall, precision, f_beta, fp = compute_metrics(classified_papers, GT, lr, criteria_num)
+    # price_per_paper = criteria_count / n_papers
+    price_per_paper = (criteria_count + fp * expert_vote_cost) / n_papers
     return loss, price_per_paper, fp_rate, fn_rate, recall, precision, f_beta
