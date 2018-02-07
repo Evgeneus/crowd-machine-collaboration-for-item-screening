@@ -47,7 +47,7 @@ def do_round(GT, papers_ids, criteria_num, papers_worker, acc, criteria_difficul
     return responses
 
 
-def sm_run(criteria_num, n_papers, papers_worker, J, lr, Nt, acc,
+def s_run(criteria_num, n_papers, papers_worker, J, lr, Nt, acc,
            criteria_power, criteria_difficulty, GT, fr_p_part):
     # initialization
     p_thrs = 0.99
