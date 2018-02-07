@@ -71,16 +71,16 @@ def classify_items(ensembled_votes, lr, filters_num, items_num):
     return items_labels, prob_in_list
 
 
-def get_machines(corr, test_num, machine_selec_conf):
+def get_machines(corr, tests_num, select_conf):
     machines_num = 10
     first_machine_acc = np.random.uniform(0.55, 0.9)
     # print("first_machine_acc: {}".format(first_machine_acc))
     test_votes = [[] for _ in range(machines_num)]
-    test_votes[0] = list(np.random.binomial(1, first_machine_acc, test_num))
+    test_votes[0] = list(np.random.binomial(1, first_machine_acc, tests_num))
 
     machines_acc = [first_machine_acc] + list(np.random.uniform(0.5, 0.95, machines_num - 1))
     for m_id, acc in enumerate(machines_acc[1:]):
-        for i in range(test_num):
+        for i in range(tests_num):
             if np.random.binomial(1, corr, 1)[0]:
                 vote = test_votes[0][i]
             else:
@@ -90,8 +90,8 @@ def get_machines(corr, test_num, machine_selec_conf):
     selected_machines_acc = []
     for machine_votes, acc in zip(test_votes, machines_acc):
         correct_votes_num = sum(machine_votes)
-        conf = beta.sf(0.5, correct_votes_num+1, test_num-correct_votes_num+1)
-        if conf > machine_selec_conf:
+        conf = beta.sf(0.5, correct_votes_num+1, tests_num-correct_votes_num+1)
+        if conf > select_conf:
             selected_machines_acc.append(acc)
 
     # check number of machines passed the tests
@@ -102,21 +102,22 @@ def get_machines(corr, test_num, machine_selec_conf):
     return selected_machines_acc
 
 
-def machine_ensemble(filters_num, items_num, gt_values, lr, corr, test_num, machine_selec_conf):
-    # parameters for machine-based classifiers (accuracy for positives, accuracy for negatives)
-    # positive vote - out of scope
-    # negative vote - in scope
-    # machines_params = [[(0.9, 0.8), (0.9, 0.8), (0.9, 0.8), (0.9, 0.8), (0.9, 0.8)],  # machines for criteria 0
-    #                    [(0.9, 0.8), (0.9, 0.8), (0.9, 0.8), (0.9, 0.8), (0.9, 0.8)],  # machines for criteria 1
-    #                    [(0.9, 0.8), (0.9, 0.8), (0.9, 0.8), (0.9, 0.8), (0.9, 0.8)],  # machines for criteria 2
-    #                    [(0.9, 0.8), (0.9, 0.8), (0.9, 0.8), (0.9, 0.8), (0.9, 0.8)]]  # machines for criteria 3
-    machines_accuracy = get_machines(corr, test_num, machine_selec_conf)
+def machine_ensemble(params):
+    filters_num = params['criteria_num']
+    items_num = params['n_papers']
+    ground_truth = params['ground_truth']
+    lr = params['lr']
+    corr = params['corr']
+    tests_num = params['tests_num']
+    select_conf = params['select_conf']
+    
+    machines_accuracy = get_machines(corr, tests_num, select_conf)
 
     votes_list = [[] for _ in range(items_num*filters_num)]
 
     for item_index in range(items_num):
         for filter_index in range(filters_num):
-            gt = gt_values[item_index*filters_num + filter_index]  # can be either 0 or 1
+            gt = ground_truth[item_index*filters_num + filter_index]  # can be either 0 or 1
             if np.random.binomial(1, machines_accuracy[0]):
                 vote = gt
             else:
@@ -125,7 +126,7 @@ def machine_ensemble(filters_num, items_num, gt_values, lr, corr, test_num, mach
 
     for item_index in range(items_num):
         for filter_index in range(filters_num):
-            gt = gt_values[item_index*filters_num + filter_index]  # can be either 0 or 1
+            gt = ground_truth[item_index*filters_num + filter_index]  # can be either 0 or 1
             vote_prev = votes_list[item_index*filters_num + filter_index][0]
             for machine in machines_accuracy[1:]:
                 vote = generate_vote(gt, machine, corr, vote_prev)
@@ -136,6 +137,6 @@ def machine_ensemble(filters_num, items_num, gt_values, lr, corr, test_num, mach
     # ensemble votes for each filter and item
     ensembled_votes_in = weighted_mv(votes_list, filters_num, items_num, machines_accuracy)
     items_labels, prob_in_list = classify_items(ensembled_votes_in, lr, filters_num, items_num)
-    loss, fp_rate, fn_rate, recall, precision, f_beta = compute_metrics(items_labels, gt_values, lr, filters_num)[:-1]
+    loss, fp_rate, fn_rate, recall, precision, f_beta = compute_metrics(items_labels, ground_truth, lr, filters_num)[:-1]
     return loss, fp_rate, fn_rate, recall, precision, f_beta, ensembled_votes_in
 
