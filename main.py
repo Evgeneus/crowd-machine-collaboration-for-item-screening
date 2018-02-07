@@ -77,6 +77,14 @@ if __name__ == '__main__':
                     pre_me.append(pre_me_)
                     f_me.append(f_beta_me)
 
+                    # s-run
+                    loss_smrun, cost_smrun, rec_sm_, pre_sm_, f_beta_sm = s_run_algorithm(params)
+                    loss_smrun_list.append(loss_smrun)
+                    cost_smrun_list.append(cost_smrun)
+                    rec_sm.append(rec_sm_)
+                    pre_sm.append(pre_sm_)
+                    f_sm.append(f_beta_sm)
+
                     # s-run with machine prior
                     params['prior_prob_in'] = prior_prob_in
 
@@ -86,14 +94,6 @@ if __name__ == '__main__':
                     rec_h.append(rec_h_)
                     pre_h.append(pre_h_)
                     f_h.append(f_beta_h)
-
-                    # s-run
-                    loss_smrun, cost_smrun, rec_sm_, pre_sm_, f_beta_sm = s_run_algorithm(params)
-                    loss_smrun_list.append(loss_smrun)
-                    cost_smrun_list.append(cost_smrun)
-                    rec_sm.append(rec_sm_)
-                    pre_sm.append(pre_sm_)
-                    f_sm.append(f_beta_sm)
 
                 # print results
                 print('ME-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' \
@@ -107,7 +107,7 @@ if __name__ == '__main__':
                               np.std(rec_sm), np.mean(cost_smrun_list), np.std(cost_smrun_list),
                               np.mean(pre_sm), np.mean(f_sm)))
 
-                print('H-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+                print('H-RUN     loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
                       'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
                       .format(np.mean(loss_h_list), np.std(loss_h_list), np.mean(rec_h), np.std(rec_h),
                               np.mean(cost_h_list), np.std(cost_h_list), np.mean(pre_h), np.mean(f_h)))
