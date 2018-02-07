@@ -34,7 +34,7 @@ if __name__ == '__main__':
                       ' select_conf: {}, expert_vote_cost: {}'.
                       format(corr, tests_num, baseline_items, lr, select_conf, expert_cost))
                 loss_me_list = []
-                rec_me, pre_me, f_me, f_me = [], [], [], []
+                rec_me, pre_me, f_me, f_me, cost_me_list = [], [], [], [], []
 
                 loss_smrun_list = []
                 cost_smrun_list = []
@@ -71,8 +71,9 @@ if __name__ == '__main__':
                     })
 
                     # machine ensemble
-                    loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_in = machine_ensemble(params)
+                    loss_me, cost_me, rec_me_, pre_me_, f_beta_me, prior_prob_in = machine_ensemble(params)
                     loss_me_list.append(loss_me)
+                    cost_me_list.append(cost_me)
                     rec_me.append(rec_me_)
                     pre_me.append(pre_me_)
                     f_me.append(f_beta_me)
@@ -96,12 +97,12 @@ if __name__ == '__main__':
                     f_h.append(f_beta_h)
 
                 # print results
-                print('ME-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' \
-                      'recall: {:1.2f}, rec_std: {:1.3f}, precision: {:1.3f}, f_b: {}'. \
-                      format(np.mean(loss_me_list), np.std(loss_me_list),
-                             np.mean(rec_me), np.std(rec_me), np.mean(pre_me), np.mean(f_me)))
+                print('ME-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f},'
+                      ' price: {:1.2f}, price_std: {:1.2f}  precision: {:1.3f}, f_b: {}'
+                      .format(np.mean(loss_me_list), np.std(loss_me_list), np.mean(rec_me), np.std(rec_me),
+                              np.mean(cost_me_list), np.std(cost_me_list), np.mean(pre_me), np.mean(f_me)))
 
-                print('SM-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+                print('SM-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
                       'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
                       .format(np.mean(loss_smrun_list), np.std(loss_smrun_list), np.mean(rec_sm),
                               np.std(rec_sm), np.mean(cost_smrun_list), np.std(cost_smrun_list),
@@ -113,17 +114,21 @@ if __name__ == '__main__':
                               np.mean(cost_h_list), np.std(cost_h_list), np.mean(pre_h), np.mean(f_h)))
                 print('---------------------')
 
-                data.append([Nt, J, lr, np.mean(loss_me_list), np.std(loss_me_list), 0., 0., 'Machines-Ensemble',
-                             np.mean(rec_me), np.std(rec_me), np.mean(pre_me), np.std(pre_me), np.mean(f_me),
-                             np.std(f_me), tests_num, corr, select_conf, baseline_items, n_papers, expert_cost])
+                data.append([Nt, J, lr, np.mean(loss_me_list), np.std(loss_me_list), np.mean(cost_me_list),
+                             np.std(cost_me_list), 'Machines-Ensemble', np.mean(rec_me), np.std(rec_me),
+                             np.mean(pre_me), np.std(pre_me), np.mean(f_me), np.std(f_me), tests_num, corr,
+                             select_conf, baseline_items, n_papers, expert_cost])
+
                 data.append([Nt, J, lr, np.mean(loss_h_list), np.std(loss_h_list),
                              np.mean(cost_h_list), np.std(cost_h_list), 'Hybrid-Ensemble', np.mean(rec_h),
                              np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
                              tests_num, corr, select_conf, baseline_items, n_papers, expert_cost])
+
                 data.append([Nt, J, lr, np.mean(loss_smrun_list), np.std(loss_smrun_list),
                              np.mean(cost_smrun_list), np.std(cost_smrun_list), 'Crowd-Ensemble', np.mean(rec_sm),
                              np.std(rec_sm), np.mean(pre_sm), np.std(pre_sm), np.mean(f_sm), np.std(f_sm),
                              tests_num, corr, select_conf, baseline_items, n_papers, expert_cost])
+
     pd.DataFrame(data,
                  columns=['Nt', 'J', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',

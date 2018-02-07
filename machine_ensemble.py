@@ -110,6 +110,7 @@ def machine_ensemble(params):
     corr = params['corr']
     tests_num = params['tests_num']
     select_conf = params['select_conf']
+    expert_cost = params['expert_cost']
     
     machines_accuracy = get_machines(corr, tests_num, select_conf)
 
@@ -137,6 +138,7 @@ def machine_ensemble(params):
     # ensemble votes for each filter and item
     ensembled_votes_in = weighted_mv(votes_list, filters_num, items_num, machines_accuracy)
     items_labels, prob_in_list = classify_items(ensembled_votes_in, lr, filters_num, items_num)
-    loss, recall, precision, f_beta, _ = compute_metrics(items_labels, ground_truth, lr, filters_num)
-    return loss, recall, precision, f_beta, ensembled_votes_in
+    loss, recall, precision, f_beta, fp = compute_metrics(items_labels, ground_truth, lr, filters_num)
+    price_per_paper = fp * expert_cost / items_num
+    return loss, price_per_paper, recall, precision, f_beta, ensembled_votes_in
 
