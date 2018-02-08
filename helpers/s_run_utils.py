@@ -10,7 +10,7 @@ def assign_criteria(papers_ids, criteria_num, values_count, power_cr_list, acc_c
     for p_id in papers_ids:
         p_classify = []
         n_min_list = []
-        joint_prob_votes_out = [1., 1., 1., 1.]
+        joint_prob_votes_out = [1.]*criteria_num
         for cr in cr_list:
             acc_cr = acc_cr_list[cr]
             if prior_prob_in != None:
