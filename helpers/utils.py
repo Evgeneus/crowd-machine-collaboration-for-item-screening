@@ -42,7 +42,7 @@ def compute_metrics(classified_papers, GT, lr, criteria_num):
     precision = 100 * tp / (tp + fp)
     loss = (fn * lr + fp) / len(classified_papers)
     beta = 1. / lr
-    f_beta = 100 * (beta + 1) * precision * recall / (beta * recall + precision)
+    f_beta = (beta + 1) * precision * recall / (beta * recall + precision)
     return loss, recall, precision, f_beta, fp
 
 
