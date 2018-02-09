@@ -22,62 +22,66 @@ if __name__ == '__main__':
     expert_cost = 20
     iter_num = 50
 
-    # criteria_num = 4
+    criteria_num = 4
     theta = 0.3
+    criteria_power = [0.14, 0.14, 0.28, 0.42]
+    criteria_difficulty = [1., 1., 1.1, 0.9]
 
     # for theta in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]:
-    for criteria_num in [1, 2, 3, 4, 5, 10]:
-        pow = 1 - theta**(1/criteria_num)
-        criteria_power = [pow]*criteria_num
-        criteria_difficulty = [1.]*criteria_num
+    # for criteria_num in [1, 2, 3, 4, 5]:
+    #     pow = 1 - theta**(1/criteria_num)
+    #     criteria_power = [pow]*criteria_num
+    #     criteria_difficulty = [1.]*criteria_num
+    # for expert_cost in [10, 20, 30, 40, 50, 70, 100]:
+    params = {
+        'criteria_num': criteria_num,
+        'n_papers': n_papers,
+        'papers_page': papers_page,
+        'criteria_power': criteria_power,
+        'criteria_difficulty': criteria_difficulty,
+        'fr_p_part': fr_p_part,
+        'J': J,
+        'Nt': Nt,
+        'lr': lr,
+        'expert_cost': expert_cost
+    }
 
-        params = {
-            'criteria_num': criteria_num,
-            'n_papers': n_papers,
-            'papers_page': papers_page,
-            'criteria_power': criteria_power,
-            'criteria_difficulty': criteria_difficulty,
-            'fr_p_part': fr_p_part,
-            'J': J,
-            'Nt': Nt,
-            'lr': lr,
-            'expert_cost': expert_cost
-        }
+    # S-run algorithm
+    loss_smrun_list = []
+    cost_smrun_list = []
+    rec_sm, pre_sm, f_sm, f_sm = [], [], [], []
+    for _ in range(iter_num):
+        # quiz, generation responses
+        workers_accuracy = run_quiz_criteria_confm(Nt, z, [1.])
+        responses, ground_truth = generate_responses_gt(n_papers, criteria_power, papers_page,
+                                                        J, workers_accuracy, criteria_difficulty)
 
-        # S-run algorithm
-        loss_smrun_list = []
-        cost_smrun_list = []
-        rec_sm, pre_sm, f_sm, f_sm = [], [], [], []
-        for _ in range(iter_num):
-            # quiz, generation responses
-            workers_accuracy = run_quiz_criteria_confm(Nt, z, [1.])
-            responses, ground_truth = generate_responses_gt(n_papers, criteria_power, papers_page,
-                                                            J, workers_accuracy, criteria_difficulty)
+        params.update({
+            'ground_truth': ground_truth,
+            'workers_accuracy': workers_accuracy,
+        })
 
-            params.update({
-                'ground_truth': ground_truth,
-                'workers_accuracy': workers_accuracy,
-            })
+        # s-run
+        loss_smrun, cost_smrun, rec_sm_, pre_sm_, f_beta_sm = s_run_algorithm(params)
+        loss_smrun_list.append(loss_smrun)
+        cost_smrun_list.append(cost_smrun)
+        rec_sm.append(rec_sm_)
+        pre_sm.append(pre_sm_)
+        f_sm.append(f_beta_sm)
 
-            # s-run
-            loss_smrun, cost_smrun, rec_sm_, pre_sm_, f_beta_sm = s_run_algorithm(params)
-            loss_smrun_list.append(loss_smrun)
-            cost_smrun_list.append(cost_smrun)
-            rec_sm.append(rec_sm_)
-            pre_sm.append(pre_sm_)
-            f_sm.append(f_beta_sm)
+    data.append([Nt, J, lr, np.mean(loss_smrun_list), np.std(loss_smrun_list),
+                 np.mean(cost_smrun_list), np.std(cost_smrun_list), 'Crowd-Ensemble', np.mean(rec_sm),
+                 np.std(rec_sm), np.mean(pre_sm), np.std(pre_sm), np.mean(f_sm), np.std(f_sm),
+                 0., 0., select_conf, baseline_items, n_papers, expert_cost, theta, criteria_num])
 
-        data.append([Nt, J, lr, np.mean(loss_smrun_list), np.std(loss_smrun_list),
-                     np.mean(cost_smrun_list), np.std(cost_smrun_list), 'Crowd-Ensemble', np.mean(rec_sm),
-                     np.std(rec_sm), np.mean(pre_sm), np.std(pre_sm), np.mean(f_sm), np.std(f_sm),
-                     0., 0., select_conf, baseline_items, n_papers, expert_cost, theta, criteria_num])
+    print('SM-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
+          'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
+          .format(np.mean(loss_smrun_list), np.std(loss_smrun_list), np.mean(rec_sm),
+                  np.std(rec_sm), np.mean(cost_smrun_list), np.std(cost_smrun_list),
+                  np.mean(pre_sm), np.mean(f_sm)))
 
-        print('SM-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
-              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
-              .format(np.mean(loss_smrun_list), np.std(loss_smrun_list), np.mean(rec_sm),
-                      np.std(rec_sm), np.mean(cost_smrun_list), np.std(cost_smrun_list),
-                      np.mean(pre_sm), np.mean(f_sm)))
-
+    # for tests_num in [15, 20, 30, 40, 50, 100, 150, 200, 500]:
+    for select_conf in [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.99]:
         # Machine and Hybrid algorithms
         for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
             print('Theta: {}, filters_num: {}, Corr: {}, test_num: {}, baseline_items: {}, lr: {},'
@@ -149,4 +153,4 @@ if __name__ == '__main__':
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
                           'f_beta', 'f_beta_std', 'tests_num', 'corr', 'select_conf', 'baseline_items',
                           'total_items', 'expert_cost', 'theta', 'filetrs_num']
-                 ).to_csv('output/data/1/fig0_base_settings.csv', index=False)
+                 ).to_csv('output/data/fig2_select_conf.csv', index=False)
