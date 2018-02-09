@@ -24,8 +24,8 @@ def assign_criteria(papers_ids, criteria_num, values_count, power_cr_list, acc_c
                 # new value is out
                 p_vote_out = acc_cr * p_paper_out + (1 - acc_cr) * (1 - p_paper_out)
                 joint_prob_votes_out[cr] *= p_vote_out
-                term1_p_out = binom(in_c+out_c+n, out_c+n)*acc_cr**(out_c+n)*(1-acc_cr)**in_c*p_paper_out
-                term1_p_in = binom(in_c+out_c+n, in_c)*acc_cr**in_c*(1-acc_cr)**(out_c+n)*(1-p_paper_out)
+                term1_p_out = binom(in_c+out_c+n, out_c+n)*acc_cr**(out_c+n)*(1-acc_cr)**in_c*power_cr_list[cr]
+                term1_p_in = binom(in_c+out_c+n, in_c)*acc_cr**in_c*(1-acc_cr)**(out_c+n)*(1-power_cr_list[cr])
                 p_paper_in_vote_out = term1_p_in * p_vote_out / (term1_p_out + term1_p_in)
                 p_paper_out = 1 - p_paper_in_vote_out
                 if p_paper_out >= 0.99:
