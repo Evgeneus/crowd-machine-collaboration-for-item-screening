@@ -14,16 +14,16 @@ def generate_vote(gt, acc, corr, vote_prev):
     return vote
 
 
-def test_machines_accuracy(filters_num, machines_params, tests_num):
+def test_machines_accuracy(filters_num, machines_params, machine_tests):
     # test machines
     machines_accuracy = [[] for _ in range(filters_num)]
     for filter_index in range(filters_num):
         for machine in machines_params[filter_index]:
             # Indeed,  we need to reject the machine if acc < 0.5
             while True:
-                correct_votes_num = sum(np.random.binomial(1, machine[0], tests_num // 2)) + \
-                                    sum(np.random.binomial(1, machine[1], tests_num // 2))
-                acc = correct_votes_num / tests_num
+                correct_votes_num = sum(np.random.binomial(1, machine[0], machine_tests // 2)) + \
+                                    sum(np.random.binomial(1, machine[1], machine_tests // 2))
+                acc = correct_votes_num / machine_tests
                 if acc > 0.5 and acc != 1.:
                     break
             machines_accuracy[filter_index].append(acc)
@@ -71,16 +71,16 @@ def classify_items(ensembled_votes, lr, filters_num, items_num):
     return items_labels, prob_in_list
 
 
-def get_machines(corr, tests_num, select_conf):
+def get_machines(corr, machine_tests, select_conf):
     machines_num = 10
     first_machine_acc = np.random.uniform(0.55, 0.9)
     # print("first_machine_acc: {}".format(first_machine_acc))
     test_votes = [[] for _ in range(machines_num)]
-    test_votes[0] = list(np.random.binomial(1, first_machine_acc, tests_num))
+    test_votes[0] = list(np.random.binomial(1, first_machine_acc, machine_tests))
 
     machines_acc = [first_machine_acc] + list(np.random.uniform(0.5, 0.95, machines_num - 1))
     for m_id, acc in enumerate(machines_acc[1:]):
-        for i in range(tests_num):
+        for i in range(machine_tests):
             if np.random.binomial(1, corr, 1)[0]:
                 vote = test_votes[0][i]
             else:
@@ -90,7 +90,7 @@ def get_machines(corr, tests_num, select_conf):
     selected_machines_acc = []
     for machine_votes, acc in zip(test_votes, machines_acc):
         correct_votes_num = sum(machine_votes)
-        conf = beta.sf(0.5, correct_votes_num+1, tests_num-correct_votes_num+1)
+        conf = beta.sf(0.5, correct_votes_num+1, machine_tests-correct_votes_num+1)
         if conf > select_conf:
             selected_machines_acc.append(acc)
 
@@ -104,15 +104,15 @@ def get_machines(corr, tests_num, select_conf):
 
 def machine_ensemble(params):
     filters_num = params['criteria_num']
-    items_num = params['n_papers']
+    items_num = params['items_num']
     ground_truth = params['ground_truth']
     lr = params['lr']
     corr = params['corr']
-    tests_num = params['tests_num']
+    machine_tests = params['machine_tests']
     select_conf = params['select_conf']
     expert_cost = params['expert_cost']
     
-    machines_accuracy = get_machines(corr, tests_num, select_conf)
+    machines_accuracy = get_machines(corr, machine_tests, select_conf)
 
     votes_list = [[] for _ in range(items_num*filters_num)]
 

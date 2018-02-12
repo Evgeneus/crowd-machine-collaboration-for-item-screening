@@ -52,8 +52,6 @@ def classify_papers_baseline(papers_ids, criteria_num, values_prob, lr):
     classified_papers = []
     classified_papers_ids = []
     rest_papers_ids = []
-    # trsh = lr / (lr + 1.)
-    # TO DO !!!
     trsh = 0.99
     for paper_id in papers_ids:
         p_inclusion = 1.
@@ -146,10 +144,10 @@ def update_v_count(values_count, criteria_num, cr_assigned, responses, p_ids):
             values_count[p_id * criteria_num + cr][0] += 1
 
 
-def update_cr_power(n_papers, criteria_num, acc_cr_list, power_cr_list, values_count):
+def update_cr_power(items_num, criteria_num, acc_cr_list, power_cr_list, values_count):
     power_cr_new = []
     apply_criteria_list = [[] for _ in range(criteria_num)]
-    for p_id in range(n_papers):
+    for p_id in range(items_num):
         for cr in range(criteria_num):
             acc_cr = acc_cr_list[cr]
             power_cr = power_cr_list[cr]

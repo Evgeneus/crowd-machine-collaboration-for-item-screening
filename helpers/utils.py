@@ -46,10 +46,10 @@ def compute_metrics(classified_papers, GT, lr, criteria_num):
     return loss, recall, precision, f_beta, fp
 
 
-def classify_papers(n_papers, criteria_num, responses, papers_page, J, lr):
+def classify_papers(items_num, criteria_num, responses, items_per_worker, J, lr):
     Psi = input_adapter(responses)
-    N = n_papers // papers_page * J
-    p = expectation_maximization(N, n_papers * criteria_num, Psi)[1]
+    N = items_num // items_per_worker * J
+    p = expectation_maximization(N, items_num * criteria_num, Psi)[1]
     values_prob = []
     for e in p:
         e_prob = [0., 0.]
@@ -59,7 +59,7 @@ def classify_papers(n_papers, criteria_num, responses, papers_page, J, lr):
 
     classified_papers = []
     exclusion_trsh = lr / (lr + 1.)
-    for paper_id in range(n_papers):
+    for paper_id in range(items_num):
         p_inclusion = 1.
         for e_paper_id in range(criteria_num):
             p_inclusion *= values_prob[paper_id*criteria_num+e_paper_id][0]
@@ -68,14 +68,14 @@ def classify_papers(n_papers, criteria_num, responses, papers_page, J, lr):
     return classified_papers
 
 
-def estimate_cr_power_dif(responses, criteria_num, n_papers, papers_page, J):
+def estimate_cr_power_dif(responses, criteria_num, items_num, items_per_worker, J):
     Psi = input_adapter(responses)
-    N = (n_papers // papers_page) * J
+    N = (items_num // items_per_worker) * J
     cr_power = []
     cr_accuracy = []
     for cr in range(criteria_num):
         cr_responses = Psi[cr::criteria_num]
-        acc_list, p_cr = expectation_maximization(N, n_papers, cr_responses)
+        acc_list, p_cr = expectation_maximization(N, items_num, cr_responses)
         acc_cr = np.mean(acc_list)
         pow_cr = 0.
         for e in p_cr:
@@ -83,7 +83,7 @@ def estimate_cr_power_dif(responses, criteria_num, n_papers, papers_page, J):
             for e_id, e_p in e.items():
                 e_prob[e_id] = e_p
             pow_cr += e_prob[1]
-        pow_cr /= n_papers
+        pow_cr /= items_num
         cr_power.append(pow_cr)
         cr_accuracy.append(acc_cr)
 

@@ -6,15 +6,15 @@ from fusion_algorithms.algorithms_utils import input_adapter
 from fusion_algorithms.em import expectation_maximization
 
 
-def do_baseline_round(n_papers, criteria_num, papers_worker, J, lr, ground_truth,
+def do_baseline_round(items_num, criteria_num, papers_worker, J, lr, ground_truth,
                    criteria_power, workers_accuracy, criteria_difficulty, values_count):
     # generate responses
-    responses = generate_responses_gt(n_papers, criteria_power, papers_worker,
+    responses = generate_responses_gt(items_num, criteria_power, papers_worker,
                                       J, workers_accuracy, criteria_difficulty, ground_truth)
     # aggregate responses
     Psi = input_adapter(responses)
-    N = (n_papers // papers_worker) * J
-    p = expectation_maximization(N, n_papers * criteria_num, Psi)[1]
+    N = (items_num // papers_worker) * J
+    p = expectation_maximization(N, items_num * criteria_num, Psi)[1]
     values_prob = []
     for e in p:
         e_prob = [0., 0.]
@@ -22,10 +22,10 @@ def do_baseline_round(n_papers, criteria_num, papers_worker, J, lr, ground_truth
             e_prob[e_id] = e_p
         values_prob.append(e_prob)
 
-    power_cr_list, acc_cr_list = estimate_cr_power_dif(responses, criteria_num, n_papers, papers_worker, J)
-    classified_papers, rest_p_ids = classify_papers_baseline(range(n_papers), criteria_num, values_prob, lr)
+    power_cr_list, acc_cr_list = estimate_cr_power_dif(responses, criteria_num, items_num, papers_worker, J)
+    classified_papers, rest_p_ids = classify_papers_baseline(range(items_num), criteria_num, values_prob, lr)
     # count value counts
-    for key in range(n_papers*criteria_num):
+    for key in range(items_num*criteria_num):
         cr_resp = responses[key]
         for v in cr_resp.values():
             values_count[key][v[0]] += 1
@@ -49,11 +49,11 @@ def do_round(ground_truth, papers_ids, criteria_num, papers_worker, workers_accu
 
 def s_run_algorithm(params):
     criteria_num = params['criteria_num']
-    n_papers = params['n_papers']
-    papers_worker = params['papers_page']
+    items_num = params['items_num']
+    papers_worker = params['items_per_worker']
     J = params['J']
     lr = params['lr']
-    Nt = params['Nt']
+    items_num = params['items_num']
     workers_accuracy = params['workers_accuracy']
     criteria_power = params['criteria_power']
     criteria_difficulty = params['criteria_difficulty']
@@ -65,29 +65,29 @@ def s_run_algorithm(params):
 
     # initialization
     p_thrs = 0.99
-    values_count = [[0, 0] for _ in range(n_papers*criteria_num)]
+    values_count = [[0, 0] for _ in range(items_num*criteria_num)]
 
     # Baseline round
     # in% papers
-    fr_n_papers = int(n_papers * fr_p_part)
-    criteria_count = (Nt + papers_worker * criteria_num) * J * fr_n_papers // papers_worker
+    fr_n_papers = int(items_num * fr_p_part)
+    criteria_count = (items_num + papers_worker * criteria_num) * J * fr_n_papers // papers_worker
     first_round_res = do_baseline_round(fr_n_papers, criteria_num, papers_worker, J, lr, ground_truth,
                                      criteria_power, workers_accuracy, criteria_difficulty, values_count)
     classified_papers_fr, rest_p_ids, power_cr_list, acc_cr_list = first_round_res
     for cr_id, cr_acc in enumerate(acc_cr_list):
         if cr_acc > 0.98:
             acc_cr_list[cr_id] = 0.95
-    classified_papers = dict(zip(range(n_papers), [1]*n_papers))
+    classified_papers = dict(zip(range(items_num), [1]*items_num))
     classified_papers.update(classified_papers_fr)
-    rest_p_ids = rest_p_ids + list(range(fr_n_papers, n_papers))
+    rest_p_ids = rest_p_ids + list(range(fr_n_papers, items_num))
 
     # compute prior power
     if prior_prob_in:
         power_cr_list = [0.] * criteria_num
-        for p_id in range(n_papers):
+        for p_id in range(items_num):
             for cr in range(criteria_num):
                 power_cr_list[cr] += 1 - prior_prob_in[p_id * criteria_num + cr]
-        power_cr_list = list(map(lambda x: x / n_papers, power_cr_list))
+        power_cr_list = list(map(lambda x: x / items_num, power_cr_list))
 
     # Do Multi rounds
     while len(rest_p_ids) != 0:
@@ -108,10 +108,10 @@ def s_run_algorithm(params):
                                                          p_thrs, acc_cr_list, power_cr_list)
 
         # update criteria power
-        power_cr_list = update_cr_power(n_papers, criteria_num, acc_cr_list, power_cr_list, values_count)
+        power_cr_list = update_cr_power(items_num, criteria_num, acc_cr_list, power_cr_list, values_count)
 
         classified_papers.update(classified_p_round)
     classified_papers = [classified_papers[p_id] for p_id in sorted(classified_papers.keys())]
     loss, recall, precision, f_beta, fp = compute_metrics(classified_papers, ground_truth, lr, criteria_num)
-    price_per_paper = (criteria_count + fp * expert_cost) / n_papers
+    price_per_paper = (criteria_count + fp * expert_cost) / items_num
     return loss, price_per_paper, recall, precision, f_beta
