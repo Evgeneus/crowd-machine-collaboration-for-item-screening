@@ -29,19 +29,17 @@ if __name__ == '__main__':
     fr_p_part = 0.02
     baseline_items = int(fr_p_part * items_num)
     items_per_worker = 10
-    data = []
     select_conf = 0.95
     worker_tests = 5
-    worker_tests = 3
     machine_tests = 50
     lr = 10
     expert_cost = 20
-    iter_num = 50
-
+    iter_num = 20
     filters_num = 4
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
     filters_dif = [1., 1., 1.1, 0.9]
+    data = []
 
     # for theta in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]:
     # for filters_num in [1, 2, 3, 4, 5]:
@@ -168,4 +166,4 @@ if __name__ == '__main__':
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
                           'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseline_items',
                           'total_items', 'expert_cost', 'theta', 'filetrs_num']
-                 ).to_csv('output/data/fig2_select_conf.csv', index=False)
+                 ).to_csv('output/data/figXXX.csv', index=False)

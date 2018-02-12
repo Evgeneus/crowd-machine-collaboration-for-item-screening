@@ -14,28 +14,12 @@ def generate_vote(gt, acc, corr, vote_prev):
     return vote
 
 
-def test_machines_accuracy(filters_num, machines_params, machine_tests):
-    # test machines
-    machines_accuracy = [[] for _ in range(filters_num)]
-    for filter_index in range(filters_num):
-        for machine in machines_params[filter_index]:
-            # Indeed,  we need to reject the machine if acc < 0.5
-            while True:
-                correct_votes_num = sum(np.random.binomial(1, machine[0], machine_tests // 2)) + \
-                                    sum(np.random.binomial(1, machine[1], machine_tests // 2))
-                acc = correct_votes_num / machine_tests
-                if acc > 0.5 and acc != 1.:
-                    break
-            machines_accuracy[filter_index].append(acc)
-    return machines_accuracy
-
-
 # fuse votes via weighted majority voting
 # output: probabilities to be negatives for each filter and item
-def weighted_mv(votes_list, filters_num, items_num, machines_accuracy):
+def naive_bayes(votes_list, filters_num, items_num, estimated_acc):
     probs_list = [None]*filters_num*items_num
     for filter_index in range(filters_num):
-        filter_machines_acc = machines_accuracy
+        filter_machines_acc = estimated_acc
         for item_index in range(items_num):
             like_true_val = 1  # assume true value is positive
             a, b = 1., 1.  # constituents of baysian formula, prior is uniform dist.
@@ -89,18 +73,24 @@ def get_machines(corr, machine_tests, select_conf):
             test_votes[m_id+1].append(vote)
 
     selected_machines_acc = []
+    estimated_acc = []
     for machine_votes, acc in zip(test_votes, machines_acc):
         correct_votes_num = sum(machine_votes)
         conf = beta.sf(0.5, correct_votes_num+1, machine_tests-correct_votes_num+1)
         if conf > select_conf:
             selected_machines_acc.append(acc)
+            m_acc = correct_votes_num / machine_tests
+            if m_acc > 0.95:
+                m_acc = 0.95
+            estimated_acc.append(m_acc)
 
     # check number of machines passed tests
     # add at least one machine passed tests (accuracy in [0.55, 0.9])
     if len(selected_machines_acc) < 1:
         selected_machines_acc.append(np.random.uniform(0.55, 0.9))
+        estimated_acc.append(1.)
 
-    return selected_machines_acc
+    return selected_machines_acc, estimated_acc
 
 
 def machine_ensemble(params):
@@ -112,7 +102,7 @@ def machine_ensemble(params):
     machine_tests = params['machine_tests']
     select_conf = params['select_conf']
     
-    machines_accuracy = get_machines(corr, machine_tests, select_conf)
+    machines_accuracy, estimated_acc = get_machines(corr, machine_tests, select_conf)
 
     votes_list = [[] for _ in range(items_num*filters_num)]
 
@@ -138,7 +128,7 @@ def machine_ensemble(params):
                 votes_list[item_index*filters_num + filter_index].append(vote)
 
     # ensemble votes for each filter and item
-    ensembled_votes = weighted_mv(votes_list, filters_num, items_num, machines_accuracy)
+    ensembled_votes = naive_bayes(votes_list, filters_num, items_num, estimated_acc)
 
     items_labels = classify_items(ensembled_votes, filters_num, items_num)
     loss, recall, precision, f_beta, _ = compute_metrics(items_labels, ground_truth, lr, filters_num)
