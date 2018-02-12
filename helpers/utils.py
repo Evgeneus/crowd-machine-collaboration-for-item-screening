@@ -5,21 +5,21 @@ from fusion_algorithms.em import expectation_maximization
 import numpy as np
 
 
-def run_quiz_criteria_confm(quiz_papers_n, cheaters_prop, criteria_difficulty):
+def run_quiz_criteria_confm(quiz_papers_n, cheaters_prop, filters_dif):
     acc_passed_distr = [[], []]
     for _ in range(100000):
-        result = do_quiz_criteria_confm(quiz_papers_n, cheaters_prop, criteria_difficulty)
+        result = do_quiz_criteria_confm(quiz_papers_n, cheaters_prop, filters_dif)
         if len(result) > 1:
             acc_passed_distr[0].append(result[0])
             acc_passed_distr[1].append(result[1])
     return acc_passed_distr
 
 
-def compute_metrics(classified_papers, GT, lr, criteria_num):
+def compute_metrics(classified_papers, GT, lr, filters_num):
     # obtain GT scope values for papers
     GT_scope = []
     for paper_id in range(len(classified_papers)):
-        if sum([GT[paper_id * criteria_num + e_paper_id] for e_paper_id in range(criteria_num)]):
+        if sum([GT[paper_id * filters_num + e_paper_id] for e_paper_id in range(filters_num)]):
             GT_scope.append(0)
         else:
             GT_scope.append(1)
@@ -46,10 +46,10 @@ def compute_metrics(classified_papers, GT, lr, criteria_num):
     return loss, recall, precision, f_beta, fp
 
 
-def classify_papers(items_num, criteria_num, responses, items_per_worker, J, lr):
+def classify_papers(items_num, filters_num, responses, items_per_worker, votes_per_item, lr):
     Psi = input_adapter(responses)
-    N = items_num // items_per_worker * J
-    p = expectation_maximization(N, items_num * criteria_num, Psi)[1]
+    N = items_num // items_per_worker * votes_per_item
+    p = expectation_maximization(N, items_num * filters_num, Psi)[1]
     values_prob = []
     for e in p:
         e_prob = [0., 0.]
@@ -61,20 +61,20 @@ def classify_papers(items_num, criteria_num, responses, items_per_worker, J, lr)
     exclusion_trsh = lr / (lr + 1.)
     for paper_id in range(items_num):
         p_inclusion = 1.
-        for e_paper_id in range(criteria_num):
-            p_inclusion *= values_prob[paper_id*criteria_num+e_paper_id][0]
+        for e_paper_id in range(filters_num):
+            p_inclusion *= values_prob[paper_id*filters_num+e_paper_id][0]
         p_exclusion = 1 - p_inclusion
         classified_papers.append(0) if p_exclusion > exclusion_trsh else classified_papers.append(1)
     return classified_papers
 
 
-def estimate_cr_power_dif(responses, criteria_num, items_num, items_per_worker, J):
+def estimate_cr_power_dif(responses, filters_num, items_num, items_per_worker, votes_per_item):
     Psi = input_adapter(responses)
-    N = (items_num // items_per_worker) * J
+    N = (items_num // items_per_worker) * votes_per_item
     cr_power = []
     cr_accuracy = []
-    for cr in range(criteria_num):
-        cr_responses = Psi[cr::criteria_num]
+    for cr in range(filters_num):
+        cr_responses = Psi[cr::filters_num]
         acc_list, p_cr = expectation_maximization(N, items_num, cr_responses)
         acc_cr = np.mean(acc_list)
         pow_cr = 0.

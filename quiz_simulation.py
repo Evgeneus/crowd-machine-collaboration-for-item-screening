@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def do_quiz_criteria_confm(quiz_papers_n, cheaters_prop, criteria_difficulty):
+def do_quiz_criteria_confm(quiz_papers_n, cheaters_prop, filters_dif):
     # decide if a worker a cheater
     if np.random.binomial(1, cheaters_prop):
         worker_type = 'rand_ch'
@@ -13,7 +13,7 @@ def do_quiz_criteria_confm(quiz_papers_n, cheaters_prop, criteria_difficulty):
 
     for paper_id in range(quiz_papers_n):
         if np.random.binomial(1, 0.5):
-            for mult in criteria_difficulty:
+            for mult in filters_dif:
                 if worker_type == 'rand_ch':
                     if not np.random.binomial(1, worker_accuracy_in):
                         return [worker_type]

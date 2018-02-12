@@ -1,4 +1,4 @@
-items_num,J,lr,loss_mean,loss_std,price_mean,price_std,alg,recall,precision,f_beta,machine_tests,corr,machine_selec_conf,baseline_items,total_items,expert_vote_cost
+items_num,votes_per_item,lr,loss_mean,loss_std,price_mean,price_std,alg,recall,precision,f_beta,machine_tests,corr,machine_selec_conf,baseline_items,total_items,expert_vote_cost
 5,3,5,0.14076666666666665,0.09973654740810356,0.0,0.0,Machines-Ensemble,0.9928248892897498,0.7231625239554021,0.9301906717769693,50,0.0,0.95,20,1000,0
 5,3,5,0.022500000000000003,0.014568802284333467,2.4882,0.18533400479494674,Hybrid-Ensemble,0.9928696344318705,0.9637291704497422,0.9878610731201841,50,0.0,0.95,20,1000,0
 5,3,5,0.18273333333333333,0.06809891498564587,4.018433333333333,0.5192417345407521,Crowd-Ensemble,0.966318572414605,0.7078265448557332,0.9068317773157113,50,0.0,0.95,20,1000,0
