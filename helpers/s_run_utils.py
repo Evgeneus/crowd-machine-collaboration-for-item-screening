@@ -48,7 +48,7 @@ def assign_criteria(papers_ids, filters_num, values_count, power_cr_list, acc_cr
     return cr_assigned, in_papers_ids, papers_ids_new
 
 
-def classify_papers_baseline(papers_ids, filters_num, values_prob, lr):
+def classify_papers_baseline(papers_ids, filters_num, values_prob):
     classified_papers = []
     classified_papers_ids = []
     rest_papers_ids = []
@@ -108,17 +108,17 @@ def classify_papers(papers_ids, filters_num, values_count, p_thrs, acc_cr_list, 
     return dict(zip(classified_papers_ids, classified_papers)), rest_papers_ids
 
 
-def generate_responses(GT, papers_ids, filters_num, papers_worker, acc, filters_dif, cr_assigned):
+def generate_responses(GT, papers_ids, filters_num, items_per_worker, acc, filters_dif, cr_assigned):
     responses = []
     n = len(papers_ids)
-    workers_n = 1 if n < papers_worker else n // papers_worker
+    workers_n = 1 if n < items_per_worker else n // items_per_worker
     for w_ind in range(workers_n):
         worker_acc_in = acc[1].pop()
         acc[1].insert(0, worker_acc_in)
         worker_acc_out = acc[0].pop()
         acc[0].insert(0, worker_acc_out)
-        for cr, p_id in zip(cr_assigned[w_ind*papers_worker: w_ind*papers_worker+papers_worker],
-                            papers_ids[w_ind*papers_worker: w_ind*papers_worker+papers_worker]):
+        for cr, p_id in zip(cr_assigned[w_ind*items_per_worker: w_ind*items_per_worker+items_per_worker],
+                            papers_ids[w_ind*items_per_worker: w_ind*items_per_worker+items_per_worker]):
             cr_vals_id = range(p_id * filters_num, p_id * filters_num + filters_num, 1)
             isPaperIN = sum([GT[i] for i in cr_vals_id]) == 0
             if isPaperIN:

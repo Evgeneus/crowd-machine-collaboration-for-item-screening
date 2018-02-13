@@ -26,9 +26,10 @@ iter_num - number of iterations for averaging results
 if __name__ == '__main__':
     z = 0.3
     items_num = 1000
-    fr_p_part = 0.02
-    baseline_items = int(fr_p_part * items_num)
     items_per_worker = 10
+    baseline_items = 20  # must be a multiple of items_per_worker
+    if baseline_items % items_per_worker:
+        raise ValueError('baseline_items must be a multiple of items_per_worker')
     select_conf = 0.95
     worker_tests = 5
     votes_per_item = 3
@@ -51,11 +52,11 @@ if __name__ == '__main__':
     params = {
         'filters_num': filters_num,
         'items_num': items_num,
+        'baseline_items': baseline_items,
         'items_per_worker': items_per_worker,
         'votes_per_item': votes_per_item,
         'filters_select': filters_select,
         'filters_dif': filters_dif,
-        'fr_p_part': fr_p_part,
         'worker_tests': worker_tests,
         'lr': lr,
         'expert_cost': expert_cost
