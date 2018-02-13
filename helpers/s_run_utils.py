@@ -48,7 +48,7 @@ def assign_criteria(papers_ids, filters_num, values_count, power_cr_list, acc_cr
     return cr_assigned, in_papers_ids, papers_ids_new
 
 
-def classify_papers_baseline(papers_ids, filters_num, values_prob):
+def classify_items_baseround(papers_ids, filters_num, values_prob):
     classified_papers = []
     classified_papers_ids = []
     rest_papers_ids = []
@@ -108,8 +108,8 @@ def classify_papers(papers_ids, filters_num, values_count, p_thrs, acc_cr_list, 
     return dict(zip(classified_papers_ids, classified_papers)), rest_papers_ids
 
 
-def generate_responses(GT, papers_ids, filters_num, items_per_worker, acc, filters_dif, cr_assigned):
-    responses = []
+def generate_votes(GT, papers_ids, filters_num, items_per_worker, acc, filters_dif, cr_assigned):
+    votes = []
     n = len(papers_ids)
     workers_n = 1 if n < items_per_worker else n // items_per_worker
     for w_ind in range(workers_n):
@@ -132,12 +132,12 @@ def generate_responses(GT, papers_ids, filters_num, items_per_worker, acc, filte
                 vote = GT_cr
             else:
                 vote = 1 - GT_cr
-            responses.append(vote)
-    return responses
+            votes.append(vote)
+    return votes
 
 
-def update_v_count(values_count, filters_num, cr_assigned, responses, p_ids):
-    for cr, vote, p_id in zip(cr_assigned, responses, p_ids):
+def update_v_count(values_count, filters_num, cr_assigned, votes, p_ids):
+    for cr, vote, p_id in zip(cr_assigned, votes, p_ids):
         if vote:
             values_count[p_id * filters_num + cr][1] += 1
         else:

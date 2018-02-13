@@ -13,7 +13,7 @@ def generate_gold_data(items_num, filters_select):
     return gold_data
 
 
-def generate_responses_gt(items_num, filters_select, items_per_worker, worker_tests, acc, filters_dif, GT=None):
+def generate_votes_gt(items_num, filters_select, items_per_worker, worker_tests, acc, filters_dif, GT=None):
     if not GT:
         GT = generate_gold_data(items_num, filters_select)
         is_GT_genereated = True
@@ -22,12 +22,12 @@ def generate_responses_gt(items_num, filters_select, items_per_worker, worker_te
     acc_out_list = acc[0]
     acc_in_list = acc[1]
 
-    # generate responses
+    # generate votes
     pages_n = items_num // items_per_worker
     filters_num = len(filters_select)
-    responses = {}
+    votes = {}
     for e_paper_id in range(pages_n*items_per_worker*filters_num):
-        responses[e_paper_id] = {}
+        votes[e_paper_id] = {}
     for page_id in range(pages_n):
         for i in range(worker_tests):
             worker_id = page_id * worker_tests + i
@@ -47,8 +47,8 @@ def generate_responses_gt(items_num, filters_select, items_per_worker, worker_te
                         vote = GT[e_paper_id]
                     else:
                         vote = 1 - GT[e_paper_id]
-                    responses[e_paper_id][worker_id] = [vote]
+                    votes[e_paper_id][worker_id] = [vote]
     if is_GT_genereated:
-        return responses, GT
+        return votes, GT
     else:
-        return responses
+        return votes

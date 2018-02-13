@@ -46,8 +46,8 @@ def compute_metrics(classified_papers, GT, lr, filters_num):
     return loss, recall, precision, f_beta, fp
 
 
-def classify_papers(items_num, filters_num, responses, items_per_worker, votes_per_item, lr):
-    Psi = input_adapter(responses)
+def classify_papers(items_num, filters_num, votes, items_per_worker, votes_per_item, lr):
+    Psi = input_adapter(votes)
     N = items_num // items_per_worker * votes_per_item
     p = expectation_maximization(N, items_num * filters_num, Psi)[1]
     values_prob = []
@@ -68,14 +68,14 @@ def classify_papers(items_num, filters_num, responses, items_per_worker, votes_p
     return classified_papers
 
 
-def estimate_cr_power_dif(responses, filters_num, items_num, items_per_worker, votes_per_item):
-    Psi = input_adapter(responses)
+def estimate_filters_property(votes, filters_num, items_num, items_per_worker, votes_per_item):
+    Psi = input_adapter(votes)
     N = (items_num // items_per_worker) * votes_per_item
     cr_power = []
     cr_accuracy = []
     for cr in range(filters_num):
-        cr_responses = Psi[cr::filters_num]
-        acc_list, p_cr = expectation_maximization(N, items_num, cr_responses)
+        cr_votes = Psi[cr::filters_num]
+        acc_list, p_cr = expectation_maximization(N, items_num, cr_votes)
         acc_cr = np.mean(acc_list)
         pow_cr = 0.
         for e in p_cr:

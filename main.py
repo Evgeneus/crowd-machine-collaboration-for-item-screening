@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from generator import generate_responses_gt
+from generator import generate_votes_gt
 from helpers.utils import run_quiz_criteria_confm
 from s_run import s_run_algorithm
 from machine_ensemble import machine_ensemble
@@ -9,7 +9,7 @@ from machine_ensemble import machine_ensemble
 '''
 z - proportion of cheaters
 lr - loss ration, i.e., how much a False Negative is more harmful than a False Positive
-votes_per_item - crowd votes per item for baseline round
+votes_per_item - crowd votes per item for base round
 worker_tests - number of test questions per worker
 machine_tests - number of test items per machine classifier
 corr - correlation of errors between machine classifiers
@@ -27,16 +27,16 @@ if __name__ == '__main__':
     z = 0.3
     items_num = 1000
     items_per_worker = 10
-    baseline_items = 20  # must be a multiple of items_per_worker
-    if baseline_items % items_per_worker:
-        raise ValueError('baseline_items must be a multiple of items_per_worker')
+    baseround_items = 20  # must be a multiple of items_per_worker
+    if baseround_items % items_per_worker:
+        raise ValueError('baseround_items must be a multiple of items_per_worker')
     select_conf = 0.95
     worker_tests = 5
     votes_per_item = 3
     machine_tests = 50
     lr = 10
     expert_cost = 20
-    iter_num = 50
+    iter_num = 3
     filters_num = 4
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     params = {
         'filters_num': filters_num,
         'items_num': items_num,
-        'baseline_items': baseline_items,
+        'baseround_items': baseround_items,
         'items_per_worker': items_per_worker,
         'votes_per_item': votes_per_item,
         'filters_select': filters_select,
@@ -67,9 +67,9 @@ if __name__ == '__main__':
     cost_smrun_list = []
     rec_sm, pre_sm, f_sm, f_sm = [], [], [], []
     for _ in range(iter_num):
-        # quiz, generation responses
+        # quiz, generation votes
         workers_accuracy = run_quiz_criteria_confm(worker_tests, z, [1.])
-        responses, ground_truth = generate_responses_gt(items_num, filters_select, items_per_worker,
+        votes, ground_truth = generate_votes_gt(items_num, filters_select, items_per_worker,
                                                         votes_per_item, workers_accuracy, filters_dif)
 
         params.update({
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     data.append([worker_tests, worker_tests, lr, np.mean(loss_smrun_list), np.std(loss_smrun_list),
                  np.mean(cost_smrun_list), np.std(cost_smrun_list), 'Crowd-Ensemble', np.mean(rec_sm),
                  np.std(rec_sm), np.mean(pre_sm), np.std(pre_sm), np.mean(f_sm), np.std(f_sm),
-                 0., 0., select_conf, baseline_items, items_num, expert_cost, theta, filters_num])
+                 0., 0., select_conf, baseround_items, items_num, expert_cost, theta, filters_num])
 
     print('SM-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
           'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
@@ -101,9 +101,9 @@ if __name__ == '__main__':
     # for select_conf in [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.99]:
         # Machine and Hybrid algorithms
         for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
-            print('Theta: {}, filters_num: {}, Corr: {}, test_num: {}, baseline_items: {}, lr: {},'
+            print('Theta: {}, filters_num: {}, Corr: {}, test_num: {}, baseround_items: {}, lr: {},'
                   ' select_conf: {}, expert_vote_cost: {}'.
-                  format(theta, filters_num, corr, machine_tests, baseline_items, lr, select_conf, expert_cost))
+                  format(theta, filters_num, corr, machine_tests, baseround_items, lr, select_conf, expert_cost))
             loss_me_list = []
             rec_me, pre_me, f_me, f_me = [], [], [], []
 
@@ -112,9 +112,9 @@ if __name__ == '__main__':
             rec_h, pre_h, f_h, f_h = [], [], [], []
 
             for _ in range(iter_num):
-                # quiz, generation responses
+                # quiz, generation votes
                 workers_accuracy = run_quiz_criteria_confm(worker_tests, z, [1.])
-                responses, ground_truth = generate_responses_gt(items_num, filters_select, items_per_worker,
+                votes, ground_truth = generate_votes_gt(items_num, filters_select, items_per_worker,
                                                                 votes_per_item, workers_accuracy, filters_dif)
 
                 params.update({
@@ -157,17 +157,17 @@ if __name__ == '__main__':
             data.append([worker_tests, worker_tests, lr, np.mean(loss_me_list), np.std(loss_me_list), 0.,
                          0., 'Machines-Ensemble', np.mean(rec_me), np.std(rec_me),
                          np.mean(pre_me), np.std(pre_me), np.mean(f_me), np.std(f_me), machine_tests, corr,
-                         select_conf, baseline_items, items_num, expert_cost, theta, filters_num])
+                         select_conf, baseround_items, items_num, expert_cost, theta, filters_num])
 
             data.append([worker_tests, worker_tests, lr, np.mean(loss_h_list), np.std(loss_h_list),
                          np.mean(cost_h_list), np.std(cost_h_list), 'Hybrid-Ensemble', np.mean(rec_h),
                          np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
-                         machine_tests, corr, select_conf, baseline_items, items_num, expert_cost,
+                         machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
                          theta, filters_num])
 
     pd.DataFrame(data,
                  columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
-                          'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseline_items',
+                          'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
                           'total_items', 'expert_cost', 'theta', 'filetrs_num']
                  ).to_csv('output/data/figXXX.csv', index=False)
