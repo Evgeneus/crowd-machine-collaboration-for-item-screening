@@ -2,22 +2,22 @@ import numpy as np
 from scipy.special import binom
 
 
-def assign_criteria(papers_ids, filters_num, values_count, power_cr_list, acc_cr_list, prior_prob_in=None):
+def assign_criteria(papers_ids, filters_num, values_count, power_cr_list, filters_acc_est, prior_prob_in=None):
     cr_assigned = []
     papers_ids_new = []
     cr_list = range(filters_num)
-    in_papers_ids = []
-    for p_id in papers_ids:
+    # in_papers_ids = []
+    for item_index in papers_ids:
         p_classify = []
         n_min_list = []
         joint_prob_votes_out = [1.]*filters_num
         for cr in cr_list:
-            acc_cr = acc_cr_list[cr]
+            acc_cr = filters_acc_est[cr]
             if prior_prob_in != None:
-                p_paper_out = 1 - prior_prob_in[p_id * filters_num + cr]
+                p_paper_out = 1 - prior_prob_in[item_index * filters_num + cr]
             else:
                 p_paper_out = power_cr_list[cr]
-            cr_count = values_count[p_id * filters_num + cr]
+            cr_count = values_count[item_index * filters_num + cr]
             in_c = cr_count[0]
             out_c = cr_count[1]
             for n in range(1, 11):
@@ -39,13 +39,17 @@ def assign_criteria(papers_ids, filters_num, values_count, power_cr_list, acc_cr
         n_min = n_min_list[cr_assign]
         joint_prob = joint_prob_votes_out[cr_assign]
 
+        # # check stopping condition
+        # if n_min / joint_prob >= 15:
+        #     in_papers_ids.append(item_index)
+        # else:
+        #     cr_assigned.append(cr_assign)
+        #     papers_ids_new.append(item_index)
         # check stopping condition
-        if n_min / joint_prob >= 15:
-            in_papers_ids.append(p_id)
-        else:
+        if n_min / joint_prob < 15:
             cr_assigned.append(cr_assign)
-            papers_ids_new.append(p_id)
-    return cr_assigned, in_papers_ids, papers_ids_new
+            papers_ids_new.append(item_index)
+    return cr_assigned, papers_ids_new
 
 
 def classify_items_baseround(papers_ids, filters_num, values_prob):
@@ -70,21 +74,21 @@ def classify_items_baseround(papers_ids, filters_num, values_prob):
     return dict(zip(classified_papers_ids, classified_papers)), rest_papers_ids
 
 
-def classify_papers(papers_ids, filters_num, values_count, p_thrs, acc_cr_list, power_cr_list, prior_prob_in=None):
+def classify_items(papers_ids, filters_num, values_count, p_thrs, filters_acc_est, power_cr_list, prior_prob_in=None):
     classified_papers = []
     classified_papers_ids = []
     rest_papers_ids = []
 
-    for p_id in papers_ids:
+    for item_index in papers_ids:
         p_inclusion = 1.
         for cr in range(filters_num):
-            acc_cr = acc_cr_list[cr]
+            acc_cr = filters_acc_est[cr]
             # power_cr = power_cr_list[cr]
-            cr_count = values_count[p_id * filters_num + cr]
+            cr_count = values_count[item_index * filters_num + cr]
             in_c = cr_count[0]
             out_c = cr_count[1]
             if prior_prob_in != None:
-                p_paper_out = 1 - prior_prob_in[p_id * filters_num + cr]
+                p_paper_out = 1 - prior_prob_in[item_index * filters_num + cr]
             else:
                 p_paper_out = power_cr_list[cr]
 
@@ -99,12 +103,12 @@ def classify_papers(papers_ids, filters_num, values_count, p_thrs, acc_cr_list, 
 
         if p_exclusion > p_thrs:
             classified_papers.append(0)
-            classified_papers_ids.append(p_id)
+            classified_papers_ids.append(item_index)
         elif p_inclusion > p_thrs:
             classified_papers.append(1)
-            classified_papers_ids.append(p_id)
+            classified_papers_ids.append(item_index)
         else:
-            rest_papers_ids.append(p_id)
+            rest_papers_ids.append(item_index)
     return dict(zip(classified_papers_ids, classified_papers)), rest_papers_ids
 
 
@@ -117,16 +121,16 @@ def generate_votes(GT, papers_ids, filters_num, items_per_worker, acc, filters_d
         acc[1].insert(0, worker_acc_in)
         worker_acc_out = acc[0].pop()
         acc[0].insert(0, worker_acc_out)
-        for cr, p_id in zip(cr_assigned[w_ind*items_per_worker: w_ind*items_per_worker+items_per_worker],
+        for cr, item_index in zip(cr_assigned[w_ind*items_per_worker: w_ind*items_per_worker+items_per_worker],
                             papers_ids[w_ind*items_per_worker: w_ind*items_per_worker+items_per_worker]):
-            cr_vals_id = range(p_id * filters_num, p_id * filters_num + filters_num, 1)
+            cr_vals_id = range(item_index * filters_num, item_index * filters_num + filters_num, 1)
             isPaperIN = sum([GT[i] for i in cr_vals_id]) == 0
             if isPaperIN:
                 worker_acc = worker_acc_in
             else:
                 worker_acc = worker_acc_out
 
-            GT_cr = GT[p_id * filters_num + cr]
+            GT_cr = GT[item_index * filters_num + cr]
             cr_dif = filters_dif[cr]
             if np.random.binomial(1, worker_acc * cr_dif if worker_acc * cr_dif <= 1. else 1.):
                 vote = GT_cr
@@ -137,21 +141,21 @@ def generate_votes(GT, papers_ids, filters_num, items_per_worker, acc, filters_d
 
 
 def update_v_count(values_count, filters_num, cr_assigned, votes, p_ids):
-    for cr, vote, p_id in zip(cr_assigned, votes, p_ids):
+    for cr, vote, item_index in zip(cr_assigned, votes, p_ids):
         if vote:
-            values_count[p_id * filters_num + cr][1] += 1
+            values_count[item_index * filters_num + cr][1] += 1
         else:
-            values_count[p_id * filters_num + cr][0] += 1
+            values_count[item_index * filters_num + cr][0] += 1
 
 
-def update_cr_power(items_num, filters_num, acc_cr_list, power_cr_list, values_count):
+def update_filters_select(items_num, filters_num, filters_acc_est, power_cr_list, values_count):
     power_cr_new = []
     apply_criteria_list = [[] for _ in range(filters_num)]
-    for p_id in range(items_num):
+    for item_index in range(items_num):
         for cr in range(filters_num):
-            acc_cr = acc_cr_list[cr]
+            acc_cr = filters_acc_est[cr]
             power_cr = power_cr_list[cr]
-            cr_count = values_count[p_id * filters_num + cr]
+            cr_count = values_count[item_index * filters_num + cr]
             in_c = cr_count[0]
             out_c = cr_count[1]
             prop_p_in = binom(in_c+out_c, in_c)*acc_cr**in_c*(1-acc_cr)**out_c*(1-power_cr)

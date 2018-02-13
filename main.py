@@ -115,7 +115,7 @@ if __name__ == '__main__':
                 # quiz, generation votes
                 workers_accuracy = run_quiz_criteria_confm(worker_tests, z, [1.])
                 votes, ground_truth = generate_votes_gt(items_num, filters_select, items_per_worker,
-                                                                votes_per_item, workers_accuracy, filters_dif)
+                                                        votes_per_item, workers_accuracy, filters_dif)
 
                 params.update({
                     'corr': corr,
@@ -126,14 +126,14 @@ if __name__ == '__main__':
                 })
 
                 # machine ensemble
-                loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_in = machine_ensemble(params)
+                loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos = machine_ensemble(params)
                 loss_me_list.append(loss_me)
                 rec_me.append(rec_me_)
                 pre_me.append(pre_me_)
                 f_me.append(f_beta_me)
 
                 # s-run with machine prior
-                params['prior_prob_in'] = prior_prob_in
+                params['prior_prob_pos'] = prior_prob_pos
 
                 loss_h, cost_h, rec_h_, pre_h_, f_beta_h = s_run_algorithm(params)
                 loss_h_list.append(loss_h)
