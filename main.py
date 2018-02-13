@@ -31,10 +31,11 @@ if __name__ == '__main__':
     items_per_worker = 10
     select_conf = 0.95
     worker_tests = 5
+    votes_per_item = 3
     machine_tests = 50
     lr = 10
     expert_cost = 20
-    iter_num = 20
+    iter_num = 50
     filters_num = 4
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
@@ -51,6 +52,7 @@ if __name__ == '__main__':
         'filters_num': filters_num,
         'items_num': items_num,
         'items_per_worker': items_per_worker,
+        'votes_per_item': votes_per_item,
         'filters_select': filters_select,
         'filters_dif': filters_dif,
         'fr_p_part': fr_p_part,
@@ -67,7 +69,7 @@ if __name__ == '__main__':
         # quiz, generation responses
         workers_accuracy = run_quiz_criteria_confm(worker_tests, z, [1.])
         responses, ground_truth = generate_responses_gt(items_num, filters_select, items_per_worker,
-                                                        worker_tests, workers_accuracy, filters_dif)
+                                                        votes_per_item, workers_accuracy, filters_dif)
 
         params.update({
             'ground_truth': ground_truth,
@@ -93,8 +95,9 @@ if __name__ == '__main__':
                   np.std(rec_sm), np.mean(cost_smrun_list), np.std(cost_smrun_list),
                   np.mean(pre_sm), np.mean(f_sm)))
 
+    for machine_tests in [50]:
     # for machine_tests in [15, 20, 30, 40, 50, 100, 150, 200, 500]:
-    for select_conf in [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.99]:
+    # for select_conf in [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.99]:
         # Machine and Hybrid algorithms
         for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
             print('Theta: {}, filters_num: {}, Corr: {}, test_num: {}, baseline_items: {}, lr: {},'
@@ -111,7 +114,7 @@ if __name__ == '__main__':
                 # quiz, generation responses
                 workers_accuracy = run_quiz_criteria_confm(worker_tests, z, [1.])
                 responses, ground_truth = generate_responses_gt(items_num, filters_select, items_per_worker,
-                                                      worker_tests, workers_accuracy, filters_dif)
+                                                                votes_per_item, workers_accuracy, filters_dif)
 
                 params.update({
                     'corr': corr,

@@ -6,14 +6,14 @@ from fusion_algorithms.algorithms_utils import input_adapter
 from fusion_algorithms.em import expectation_maximization
 
 
-def do_baseline_round(items_num, filters_num, papers_worker, worker_tests, lr, ground_truth,
+def do_baseline_round(items_num, filters_num, papers_worker, votes_per_item, lr, ground_truth,
                    filters_select, workers_accuracy, filters_dif, values_count):
     # generate responses
     responses = generate_responses_gt(items_num, filters_select, papers_worker,
-                                      worker_tests, workers_accuracy, filters_dif, ground_truth)
+                                      votes_per_item, workers_accuracy, filters_dif, ground_truth)
     # aggregate responses
     Psi = input_adapter(responses)
-    N = (items_num // papers_worker) * worker_tests
+    N = (items_num // papers_worker) * votes_per_item
     p = expectation_maximization(N, items_num * filters_num, Psi)[1]
     values_prob = []
     for e in p:
@@ -22,7 +22,7 @@ def do_baseline_round(items_num, filters_num, papers_worker, worker_tests, lr, g
             e_prob[e_id] = e_p
         values_prob.append(e_prob)
 
-    power_cr_list, acc_cr_list = estimate_cr_power_dif(responses, filters_num, items_num, papers_worker, worker_tests)
+    power_cr_list, acc_cr_list = estimate_cr_power_dif(responses, filters_num, items_num, papers_worker, votes_per_item)
     classified_papers, rest_p_ids = classify_papers_baseline(range(items_num), filters_num, values_prob, lr)
     # count value counts
     for key in range(items_num*filters_num):
@@ -51,9 +51,9 @@ def s_run_algorithm(params):
     filters_num = params['filters_num']
     items_num = params['items_num']
     papers_worker = params['items_per_worker']
-    worker_tests = params['worker_tests']
+    votes_per_item = params['votes_per_item']
     lr = params['lr']
-    items_num = params['items_num']
+    worker_tests = params['worker_tests']
     workers_accuracy = params['workers_accuracy']
     filters_select = params['filters_select']
     filters_dif = params['filters_dif']
@@ -70,8 +70,8 @@ def s_run_algorithm(params):
     # Baseline round
     # in% papers
     fr_n_papers = int(items_num * fr_p_part)
-    criteria_count = (items_num + papers_worker * filters_num) * worker_tests * fr_n_papers // papers_worker
-    first_round_res = do_baseline_round(fr_n_papers, filters_num, papers_worker, worker_tests, lr, ground_truth,
+    criteria_count = (worker_tests + papers_worker * filters_num) * votes_per_item * fr_n_papers // papers_worker
+    first_round_res = do_baseline_round(fr_n_papers, filters_num, papers_worker, votes_per_item, lr, ground_truth,
                                      filters_select, workers_accuracy, filters_dif, values_count)
     classified_papers_fr, rest_p_ids, power_cr_list, acc_cr_list = first_round_res
     for cr_id, cr_acc in enumerate(acc_cr_list):
