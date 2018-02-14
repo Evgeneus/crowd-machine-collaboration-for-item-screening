@@ -1,7 +1,7 @@
-from generator import generate_votes_gt
 from helpers.s_run_utils import classify_items_baseround, generate_votes, \
-     update_votes_count, assign_filters, classify_items, update_filters_select
-from helpers.utils import compute_metrics, estimate_filters_property
+     update_votes_count, assign_filters, classify_items, update_filters_select, \
+     estimate_filters_property
+from helpers.utils import compute_metrics, generate_votes_gt
 from fusion_algorithms.algorithms_utils import input_adapter
 from fusion_algorithms.em import expectation_maximization
 

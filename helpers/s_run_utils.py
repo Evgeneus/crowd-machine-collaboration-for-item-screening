@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.special import binom
+from fusion_algorithms.algorithms_utils import input_adapter
+from fusion_algorithms.em import expectation_maximization
 
 
 def assign_filters(items, filters_num, values_count, filters_select_est, filters_acc_est, prior_prob_pos=None):
@@ -155,3 +157,24 @@ def update_filters_select(items_num, filters_num, filters_acc_est, filters_selec
 
     filters_select_new = [np.mean(i) for i in apply_filters_prob]
     return filters_select_new
+
+def estimate_filters_property(votes, filters_num, items_num, items_per_worker, votes_per_item):
+    psi = input_adapter(votes)
+    n = (items_num // items_per_worker) * votes_per_item
+    filters_select_est = []
+    filters_acc_est = []
+    for filter_index in range(filters_num):
+        item_filter_votes = psi[filter_index::filters_num]
+        filter_acc_list, filter_select_list = expectation_maximization(n, items_num, item_filter_votes)
+        filter_acc = np.mean(filter_acc_list)
+        filter_select = 0.
+        for i in filter_select_list:
+            i_prob = [0., 0.]
+            for i_index, i_p in i.items():
+                i_prob[i_index] = i_p
+            filter_select += i_prob[1]
+        filter_select /= items_num
+        filters_select_est.append(filter_select)
+        filters_acc_est.append(filter_acc)
+
+    return filters_select_est, filters_acc_est

@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from generator import generate_votes_gt
-from helpers.utils import simulate_workers
+from helpers.utils import simulate_workers, generate_votes_gt
 from s_run import s_run_algorithm
 from machine_ensemble import machine_ensemble
 
