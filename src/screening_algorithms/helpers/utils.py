@@ -1,37 +1,43 @@
 import numpy as np
 
 
-# simulate workers that pass a set of test questions
-def simulate_workers(worker_tests, cheaters_prop):
-    acc_passed_distr = [[], []]
-    for _ in range(100000):
-        result = simulate_quiz(worker_tests, cheaters_prop)
-        if not isinstance(result, str):
-            acc_passed_distr[0].append(result[0])
-            acc_passed_distr[1].append(result[1])
-    return acc_passed_distr
+class Workers:
 
+    def __init__(self, worker_tests, cheaters_prop):
+        self.worker_tests = worker_tests
+        self.cheaters_prop = cheaters_prop
+        self.acc_passed_neg = []
+        self.acc_passed_pos = []
 
-def simulate_quiz(worker_tests, cheaters_prop):
-    # decide if a worker a cheater
-    if np.random.binomial(1, cheaters_prop):
-        worker_type = 'rand_ch'
-        worker_acc_neg, worker_acc_pos = 0.5, 0.5
-    else:
-        worker_type = 'worker'
-        worker_acc_pos = 0.5 + (np.random.beta(1, 1) * 0.5)
-        worker_acc_neg = worker_acc_pos + 0.1 if worker_acc_pos + 0.1 <= 1. else 1.
+    # simulate workers that pass a set of test questions
+    def simulate_workers(self):
+        for _ in range(100000):
+            self._simulate_quiz()
 
-    for item_index in range(worker_tests):
-        # decide if the test item is positive or negative (50+/50-)
-        if np.random.binomial(1, 0.5):
-            # if worker is mistaken exclude him
-            if not np.random.binomial(1, worker_acc_pos):
-                return worker_type
+        return [self.acc_passed_neg, self.acc_passed_pos]
+
+    def _simulate_quiz(self):
+        # decide if a worker a cheater
+        if np.random.binomial(1, self.cheaters_prop):
+            # worker_type is 'rand_ch'
+            worker_acc_neg, worker_acc_pos = 0.5, 0.5
         else:
-            if not np.random.binomial(1, worker_acc_neg):
-                return worker_type
-    return worker_acc_neg, worker_acc_pos, worker_type
+            # worker_type is 'worker'
+            worker_acc_pos = 0.5 + (np.random.beta(1, 1) * 0.5)
+            worker_acc_neg = worker_acc_pos + 0.1 if worker_acc_pos + 0.1 <= 1. else 1.
+
+        # iterate over test questions
+        for item_index in range(self.worker_tests):
+            # decide if the test item is positive or negative (50+/50-)
+            if np.random.binomial(1, 0.5):
+                # if worker is mistaken exclude him
+                if not np.random.binomial(1, worker_acc_pos):
+                    return
+            else:
+                if not np.random.binomial(1, worker_acc_neg):
+                    return
+        self.acc_passed_pos.append(worker_acc_pos)
+        self.acc_passed_neg.append(worker_acc_neg)
 
 
 # output_data generator

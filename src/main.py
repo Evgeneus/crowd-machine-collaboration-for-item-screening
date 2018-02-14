@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from src.screening_algorithms.helpers.utils import simulate_workers, generate_votes_gt
+from src.screening_algorithms.helpers.utils import generate_votes_gt
+from src.screening_algorithms.helpers.utils import Workers
 from src.screening_algorithms.machine_ensemble import machine_ensemble
 from src.screening_algorithms.s_run import s_run_algorithm
 
@@ -67,7 +68,8 @@ if __name__ == '__main__':
     rec_sm, pre_sm, f_sm, f_sm = [], [], [], []
     for _ in range(iter_num):
         # quiz, generation votes
-        workers_accuracy = simulate_workers(worker_tests, z)
+        # workers = Workers(worker_tests, z)
+        workers_accuracy = Workers(worker_tests, z).simulate_workers()
         _, ground_truth = generate_votes_gt(items_num, filters_select, items_per_worker,
                                             votes_per_item, workers_accuracy, filters_dif)
 
@@ -112,7 +114,7 @@ if __name__ == '__main__':
 
             for _ in range(iter_num):
                 # quiz, generation votes
-                workers_accuracy = simulate_workers(worker_tests, z)
+                workers_accuracy = Workers(worker_tests, z).simulate_workers()
                 _, ground_truth = generate_votes_gt(items_num, filters_select, items_per_worker,
                                                     votes_per_item, workers_accuracy, filters_dif)
 
