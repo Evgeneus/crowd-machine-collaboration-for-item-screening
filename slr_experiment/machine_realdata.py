@@ -12,7 +12,7 @@ from sklearn.ensemble import BaggingClassifier
 from sklearn.svm import SVC
 import numpy as np
 import csv
-from realdata_experiment.crowd_main import *
+from slr_experiment.crowd_main import *
 from itertools import combinations
 import random
 

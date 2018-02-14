@@ -1,6 +1,6 @@
 import warnings
 warnings.filterwarnings("ignore")
-from realdata_experiment.machine_realdata import *
+from slr_experiment.machine_realdata import *
 
 
 acc_classifer, pred_classifiers, y_test = machineRun(0)
@@ -13,5 +13,5 @@ max_acc_classifer = max([x[6] for x in acc_classifer])
 
 classifer_acc_range = np.arange(min_acc_classifer, max_acc_classifer + 0.01, 0.1)
 
-print (corraltion_range)
-print (classifer_acc_range)
+print(corraltion_range)
+print(classifer_acc_range)
