@@ -1,35 +1,57 @@
-from quiz_simulation import do_quiz_criteria_confm
 from fusion_algorithms.algorithms_utils import input_adapter
 from fusion_algorithms.em import expectation_maximization
 
 import numpy as np
 
 
-def run_quiz_criteria_confm(quiz_papers_n, cheaters_prop, filters_dif):
+# simulate workers that pass a set of test questions
+def simulate_workers(worker_tests, cheaters_prop):
     acc_passed_distr = [[], []]
     for _ in range(100000):
-        result = do_quiz_criteria_confm(quiz_papers_n, cheaters_prop, filters_dif)
-        if len(result) > 1:
+        result = simulate_quiz(worker_tests, cheaters_prop)
+        if not isinstance(result, str):
             acc_passed_distr[0].append(result[0])
             acc_passed_distr[1].append(result[1])
     return acc_passed_distr
 
 
-def compute_metrics(classified_papers, GT, lr, filters_num):
-    # obtain GT scope values for papers
-    GT_scope = []
-    for paper_id in range(len(classified_papers)):
-        if sum([GT[paper_id * filters_num + e_paper_id] for e_paper_id in range(filters_num)]):
-            GT_scope.append(0)
+def simulate_quiz(worker_tests, cheaters_prop):
+    # decide if a worker a cheater
+    if np.random.binomial(1, cheaters_prop):
+        worker_type = 'rand_ch'
+        worker_acc_neg, worker_acc_pos = 0.5, 0.5
+    else:
+        worker_type = 'worker'
+        worker_acc_pos = 0.5 + (np.random.beta(1, 1) * 0.5)
+        worker_acc_neg = worker_acc_pos + 0.1 if worker_acc_pos + 0.1 <= 1. else 1.
+
+    for item_index in range(worker_tests):
+        # decide if the test item is positive or negative (50+/50-)
+        if np.random.binomial(1, 0.5):
+            # if worker is mistaken exclude him
+            if not np.random.binomial(1, worker_acc_pos):
+                return worker_type
         else:
-            GT_scope.append(1)
+            if not np.random.binomial(1, worker_acc_neg):
+                return worker_type
+    return worker_acc_neg, worker_acc_pos, worker_type
+
+
+def compute_metrics(items, gt, lr, filters_num):
+    # obtain ground_truth scope values for items
+    gt_scope = []
+    for item_index in range(len(items)):
+        if sum([gt[item_index*filters_num + filter_index] for filter_index in range(filters_num)]):
+            gt_scope.append(0)
+        else:
+            gt_scope.append(1)
     # Positive == Inclusion (Relevant)
     # Negative == Exclusion (Not relevant)
     fp = 0.
     fn = 0.
     tp = 0.
     tn = 0.
-    for cl_val, gt_val in zip(classified_papers, GT_scope):
+    for cl_val, gt_val in zip(items, gt_scope):
         if gt_val and not cl_val:
             fn += 1
         if not gt_val and cl_val:
@@ -40,52 +62,29 @@ def compute_metrics(classified_papers, GT, lr, filters_num):
             tn += 1
     recall = 100 * tp / (tp + fn)
     precision = 100 * tp / (tp + fp)
-    loss = (fn * lr + fp) / len(classified_papers)
+    loss = (fn * lr + fp) / len(items)
     beta = 1. / lr
     f_beta = (beta + 1) * precision * recall / (beta * recall + precision)
     return loss, recall, precision, f_beta, fp
 
 
-def classify_papers(items_num, filters_num, votes, items_per_worker, votes_per_item, lr):
-    Psi = input_adapter(votes)
-    N = items_num // items_per_worker * votes_per_item
-    p = expectation_maximization(N, items_num * filters_num, Psi)[1]
-    values_prob = []
-    for e in p:
-        e_prob = [0., 0.]
-        for e_id, e_p in e.items():
-            e_prob[e_id] = e_p
-        values_prob.append(e_prob)
-
-    classified_papers = []
-    exclusion_trsh = lr / (lr + 1.)
-    for paper_id in range(items_num):
-        p_inclusion = 1.
-        for e_paper_id in range(filters_num):
-            p_inclusion *= values_prob[paper_id*filters_num+e_paper_id][0]
-        p_exclusion = 1 - p_inclusion
-        classified_papers.append(0) if p_exclusion > exclusion_trsh else classified_papers.append(1)
-    return classified_papers
-
-
 def estimate_filters_property(votes, filters_num, items_num, items_per_worker, votes_per_item):
-    Psi = input_adapter(votes)
-    N = (items_num // items_per_worker) * votes_per_item
-    cr_power = []
-    cr_accuracy = []
-    for cr in range(filters_num):
-        cr_votes = Psi[cr::filters_num]
-        acc_list, p_cr = expectation_maximization(N, items_num, cr_votes)
-        acc_cr = np.mean(acc_list)
-        pow_cr = 0.
-        for e in p_cr:
-            e_prob = [0., 0.]
-            for e_id, e_p in e.items():
-                e_prob[e_id] = e_p
-            pow_cr += e_prob[1]
-        pow_cr /= items_num
-        cr_power.append(pow_cr)
-        cr_accuracy.append(acc_cr)
+    psi = input_adapter(votes)
+    n = (items_num // items_per_worker) * votes_per_item
+    filters_select_est = []
+    filters_acc_est = []
+    for filter_index in range(filters_num):
+        item_filter_votes = psi[filter_index::filters_num]
+        filter_acc_list, filter_select_list = expectation_maximization(n, items_num, item_filter_votes)
+        filter_acc = np.mean(filter_acc_list)
+        filter_select = 0.
+        for i in filter_select_list:
+            i_prob = [0., 0.]
+            for i_index, i_p in i.items():
+                i_prob[i_index] = i_p
+            filter_select += i_prob[1]
+        filter_select /= items_num
+        filters_select_est.append(filter_select)
+        filters_acc_est.append(filter_acc)
 
-    return cr_power, cr_accuracy
-
+    return filters_select_est, filters_acc_est

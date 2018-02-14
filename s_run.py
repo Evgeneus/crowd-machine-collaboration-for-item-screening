@@ -1,6 +1,6 @@
 from generator import generate_votes_gt
 from helpers.s_run_utils import classify_items_baseround, generate_votes, \
-     update_v_count, assign_criteria, classify_items, update_filters_select
+     update_votes_count, assign_filters, classify_items, update_filters_select
 from helpers.utils import compute_metrics, estimate_filters_property
 from fusion_algorithms.algorithms_utils import input_adapter
 from fusion_algorithms.em import expectation_maximization
@@ -12,9 +12,9 @@ def do_baseround(items_num, filters_num, items_per_worker, votes_per_item, groun
     votes = generate_votes_gt(items_num, filters_select, items_per_worker,
                               votes_per_item, workers_accuracy, filters_dif, ground_truth)
     # aggregate votes via truth finder
-    Psi = input_adapter(votes)
-    N = (items_num // items_per_worker) * votes_per_item
-    _, p = expectation_maximization(N, items_num * filters_num, Psi)
+    psi = input_adapter(votes)
+    n = (items_num // items_per_worker) * votes_per_item
+    _, p = expectation_maximization(n, items_num * filters_num, psi)
     values_prob = []
     for e in p:
         e_prob = [0., 0.]
@@ -22,7 +22,7 @@ def do_baseround(items_num, filters_num, items_per_worker, votes_per_item, groun
             e_prob[e_id] = e_p
         values_prob.append(e_prob)
 
-    filters_select_est, filters_dif_est = estimate_filters_property(votes, filters_num, items_num,
+    filters_select_est, filters_acc_est = estimate_filters_property(votes, filters_num, items_num,
                                                                     items_per_worker, votes_per_item)
     items_classified, items_to_classify = classify_items_baseround(range(items_num), filters_num, values_prob)
     # count value counts
@@ -31,7 +31,7 @@ def do_baseround(items_num, filters_num, items_per_worker, votes_per_item, groun
         for v in filter_item_votes.values():
             values_count[key][v[0]] += 1
 
-    return items_classified, items_to_classify, filters_select_est, filters_dif_est
+    return items_classified, items_to_classify, filters_select_est, filters_acc_est
 
 
 def do_round(ground_truth, items, filters_num, items_per_worker, workers_accuracy, filters_dif, filters_assigned):
@@ -95,13 +95,13 @@ def s_run_algorithm(params):
     while len(items_to_classify) != 0:
 
         votes_count += len(items_to_classify)
-        filters_assigned, items_to_classify = assign_criteria(items_to_classify, filters_num, values_count,
-                                                              filters_select_est, filters_acc_est, prior_prob_pos)
+        filters_assigned, items_to_classify = assign_filters(items_to_classify, filters_num, values_count,
+                                                             filters_select_est, filters_acc_est, prior_prob_pos)
 
         votes = do_round(ground_truth, items_to_classify, filters_num, items_per_worker*filters_num,
                          workers_accuracy, filters_dif, filters_assigned)
         # update values_count
-        update_v_count(values_count, filters_num, filters_assigned, votes, items_to_classify)
+        update_votes_count(values_count, filters_num, filters_assigned, votes, items_to_classify)
 
         # update filters selectivity
         filters_select_est = update_filters_select(items_num, filters_num, filters_acc_est,

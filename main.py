@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from generator import generate_votes_gt
-from helpers.utils import run_quiz_criteria_confm
+from helpers.utils import simulate_workers
 from s_run import s_run_algorithm
 from machine_ensemble import machine_ensemble
 
@@ -36,11 +36,11 @@ if __name__ == '__main__':
     machine_tests = 50
     lr = 10
     expert_cost = 20
-    iter_num = 3
     filters_num = 4
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
     filters_dif = [1., 1., 1.1, 0.9]
+    iter_num = 50
     data = []
 
     # for theta in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]:
@@ -68,9 +68,9 @@ if __name__ == '__main__':
     rec_sm, pre_sm, f_sm, f_sm = [], [], [], []
     for _ in range(iter_num):
         # quiz, generation votes
-        workers_accuracy = run_quiz_criteria_confm(worker_tests, z, [1.])
-        votes, ground_truth = generate_votes_gt(items_num, filters_select, items_per_worker,
-                                                        votes_per_item, workers_accuracy, filters_dif)
+        workers_accuracy = simulate_workers(worker_tests, z)
+        _, ground_truth = generate_votes_gt(items_num, filters_select, items_per_worker,
+                                            votes_per_item, workers_accuracy, filters_dif)
 
         params.update({
             'ground_truth': ground_truth,
@@ -113,9 +113,9 @@ if __name__ == '__main__':
 
             for _ in range(iter_num):
                 # quiz, generation votes
-                workers_accuracy = run_quiz_criteria_confm(worker_tests, z, [1.])
-                votes, ground_truth = generate_votes_gt(items_num, filters_select, items_per_worker,
-                                                        votes_per_item, workers_accuracy, filters_dif)
+                workers_accuracy = simulate_workers(worker_tests, z)
+                _, ground_truth = generate_votes_gt(items_num, filters_select, items_per_worker,
+                                                    votes_per_item, workers_accuracy, filters_dif)
 
                 params.update({
                     'corr': corr,
