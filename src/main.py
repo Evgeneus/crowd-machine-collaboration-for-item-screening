@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from src.screening_algorithms.helpers.utils import generate_votes_gt
+from src.screening_algorithms.helpers.utils import Generator
 from src.screening_algorithms.helpers.utils import Workers
 from src.screening_algorithms.machine_ensemble import machine_ensemble
 from src.screening_algorithms.s_run import s_run_algorithm
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
     filters_dif = [1., 1., 1.1, 0.9]
-    iter_num = 2
+    iter_num = 50
     data = []
 
     # for theta in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]:
@@ -70,13 +70,10 @@ if __name__ == '__main__':
         # quiz, generation votes
         # workers = Workers(worker_tests, z)
         workers_accuracy = Workers(worker_tests, z).simulate_workers()
-        _, ground_truth = generate_votes_gt(items_num, filters_select, items_per_worker,
-                                            votes_per_item, workers_accuracy, filters_dif)
+        params.update({'workers_accuracy': workers_accuracy})
 
-        params.update({
-            'ground_truth': ground_truth,
-            'workers_accuracy': workers_accuracy,
-        })
+        _, ground_truth = Generator(params).generate_votes_gt()
+        params.update({'ground_truth': ground_truth})
 
         # s-run
         loss_smrun, cost_smrun, rec_sm_, pre_sm_, f_beta_sm = s_run_algorithm(params)
@@ -115,8 +112,10 @@ if __name__ == '__main__':
             for _ in range(iter_num):
                 # quiz, generation votes
                 workers_accuracy = Workers(worker_tests, z).simulate_workers()
-                _, ground_truth = generate_votes_gt(items_num, filters_select, items_per_worker,
-                                                    votes_per_item, workers_accuracy, filters_dif)
+                params.update({'workers_accuracy': workers_accuracy})
+
+                _, ground_truth = Generator(params).generate_votes_gt()
+                params.update({'ground_truth': ground_truth})
 
                 params.update({
                     'corr': corr,

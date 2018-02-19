@@ -40,6 +40,71 @@ class Workers:
         self.acc_passed_neg.append(worker_acc_neg)
 
 
+class Generator:
+
+    def __init__(self, params):
+        self.items_num = params['items_num']
+        self.filters_select = params['filters_select']
+        self.items_per_worker = params['items_per_worker']
+        self.worker_tests = params['worker_tests']
+        self.workers_accuracy = params['workers_accuracy']
+        self.filters_dif = params['filters_dif']
+        self.gt = params.get('gt')
+
+    def generate_votes_gt(self):
+        if not self.gt:
+            gt = generate_gold_data(self.items_num, self.filters_select)
+            is_gt_generated = True
+        else:
+            is_gt_generated = False
+        workers_accuracy_neg, workers_accuracy_pos = self.workers_accuracy
+
+        # generate votes
+        # on a page a worker see items_per_worker tasks (crowdflower style)
+        pages_num = self.items_num // self.items_per_worker
+        filters_num = len(self.filters_select)
+        votes = {}
+        for item_filter_index in range(pages_num * self.items_per_worker * filters_num):
+            votes[item_filter_index] = {}
+        for page_index in range(pages_num):
+            for i in range(self.worker_tests):
+                worker_id = page_index * self.worker_tests + i
+                w_acc_pos = workers_accuracy_pos.pop()
+                self.workers_accuracy[1].insert(0, w_acc_pos)
+                w_acc_neg = workers_accuracy_neg.pop()
+                self.workers_accuracy[0].insert(0, w_acc_neg)
+                for item_index in range(page_index * self.items_per_worker,
+                                        page_index * self.items_per_worker + self.items_per_worker):
+                    filter_item_indices = range(item_index * filters_num, item_index * filters_num + filters_num)
+                    is_item_pos = sum([gt[i] for i in filter_item_indices]) == 0
+                    if is_item_pos:
+                        worker_acc = w_acc_pos
+                    else:
+                        worker_acc = w_acc_neg
+                    for item_filter_index, f_diff in zip(filter_item_indices, self.filters_dif):
+                        if np.random.binomial(1, worker_acc * f_diff if worker_acc * f_diff <= 1. else 1.):
+                            vote = gt[item_filter_index]
+                        else:
+                            vote = 1 - gt[item_filter_index]
+                        votes[item_filter_index][worker_id] = [vote]
+        if is_gt_generated:
+            return votes, gt
+        else:
+            return votes
+
+    # output_data generator
+    def generate_gold_data(self):
+        gold_data = []
+        for item_index in range(self.items_num):
+            for filter_select in self.filters_select:
+                if np.random.binomial(1, filter_select):
+                    val = 1
+                else:
+                    val = 0
+                gold_data.append(val)
+        return gold_data
+
+
 # output_data generator
 def generate_gold_data(items_num, filters_select):
     gold_data = []
@@ -75,8 +140,8 @@ def generate_votes_gt(items_num, filters_select, items_per_worker, worker_tests,
             workers_accuracy[1].insert(0, w_acc_pos)
             w_acc_neg = workers_accuracy_neg.pop()
             workers_accuracy[0].insert(0, w_acc_neg)
-            for item_index in range(page_index*items_per_worker, page_index*items_per_worker + items_per_worker, 1):
-                filter_item_indices = range(item_index*filters_num, item_index*filters_num + filters_num, 1)
+            for item_index in range(page_index*items_per_worker, page_index*items_per_worker + items_per_worker):
+                filter_item_indices = range(item_index*filters_num, item_index*filters_num + filters_num)
                 is_item_pos = sum([gt[i] for i in filter_item_indices]) == 0
                 if is_item_pos:
                     worker_acc = w_acc_pos
