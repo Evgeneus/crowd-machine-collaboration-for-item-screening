@@ -88,8 +88,10 @@ def get_machines(corr, machine_tests, select_conf):
     # check number of machines passed tests
     # add at least one machine passed tests (accuracy in [0.55, 0.9])
     if len(selected_machines_acc) < 1:
-        selected_machines_acc.append(np.random.uniform(0.55, 0.9))
-        estimated_acc.append(1.)
+        print('zero')
+        m_acc = np.random.uniform(0.55, 0.9)
+        selected_machines_acc.append(m_acc)
+        estimated_acc.append(m_acc)
 
     return selected_machines_acc, estimated_acc
 
