@@ -43,17 +43,17 @@ class Workers:
 class Generator:
 
     def __init__(self, params):
-        self.items_num = params['items_num']
         self.filters_select = params['filters_select']
         self.items_per_worker = params['items_per_worker']
-        self.worker_tests = params['worker_tests']
         self.workers_accuracy = params['workers_accuracy']
         self.filters_dif = params['filters_dif']
-        self.gt = params.get('gt')
+        self.filters_num = params['filters_num']
+        self.votes_per_item = params['votes_per_item']
+        self.ground_truth = params.get('ground_truth')
 
-    def generate_votes_gt(self):
-        if not self.gt:
-            gt = generate_gold_data(self.items_num, self.filters_select)
+    def generate_votes_gt(self, items_num):
+        if not self.ground_truth:
+            self.ground_truth = self.generate_gold_data(items_num)
             is_gt_generated = True
         else:
             is_gt_generated = False
@@ -61,41 +61,41 @@ class Generator:
 
         # generate votes
         # on a page a worker see items_per_worker tasks (crowdflower style)
-        pages_num = self.items_num // self.items_per_worker
-        filters_num = len(self.filters_select)
+        pages_num = items_num // self.items_per_worker
         votes = {}
-        for item_filter_index in range(pages_num * self.items_per_worker * filters_num):
+        for item_filter_index in range(pages_num * self.items_per_worker * self.filters_num):
             votes[item_filter_index] = {}
         for page_index in range(pages_num):
-            for i in range(self.worker_tests):
-                worker_id = page_index * self.worker_tests + i
+            for i in range(self.votes_per_item):
+                worker_id = page_index * self.votes_per_item + i
                 w_acc_pos = workers_accuracy_pos.pop()
                 self.workers_accuracy[1].insert(0, w_acc_pos)
                 w_acc_neg = workers_accuracy_neg.pop()
                 self.workers_accuracy[0].insert(0, w_acc_neg)
                 for item_index in range(page_index * self.items_per_worker,
                                         page_index * self.items_per_worker + self.items_per_worker):
-                    filter_item_indices = range(item_index * filters_num, item_index * filters_num + filters_num)
-                    is_item_pos = sum([gt[i] for i in filter_item_indices]) == 0
+                    filter_item_indices = range(item_index * self.filters_num,
+                                                item_index * self.filters_num + self.filters_num)
+                    is_item_pos = sum([self.ground_truth[i] for i in filter_item_indices]) == 0
                     if is_item_pos:
                         worker_acc = w_acc_pos
                     else:
                         worker_acc = w_acc_neg
                     for item_filter_index, f_diff in zip(filter_item_indices, self.filters_dif):
                         if np.random.binomial(1, worker_acc * f_diff if worker_acc * f_diff <= 1. else 1.):
-                            vote = gt[item_filter_index]
+                            vote = self.ground_truth[item_filter_index]
                         else:
-                            vote = 1 - gt[item_filter_index]
+                            vote = 1 - self.ground_truth[item_filter_index]
                         votes[item_filter_index][worker_id] = [vote]
         if is_gt_generated:
-            return votes, gt
+            return votes, self.ground_truth
         else:
             return votes
 
     # output_data generator
-    def generate_gold_data(self):
+    def generate_gold_data(self, items_num):
         gold_data = []
-        for item_index in range(self.items_num):
+        for item_index in range(items_num):
             for filter_select in self.filters_select:
                 if np.random.binomial(1, filter_select):
                     val = 1
@@ -105,87 +105,35 @@ class Generator:
         return gold_data
 
 
-# output_data generator
-def generate_gold_data(items_num, filters_select):
-    gold_data = []
-    for item_index in range(items_num):
-        for filter_select in filters_select:
-            if np.random.binomial(1, filter_select):
-                val = 1
+class Metrics:
+
+    @staticmethod
+    def compute_metrics(items, gt, lr, filters_num):
+        # obtain ground_truth scope values for items
+        gt_scope = []
+        for item_index in range(len(items)):
+            if sum([gt[item_index*filters_num + filter_index] for filter_index in range(filters_num)]):
+                gt_scope.append(0)
             else:
-                val = 0
-            gold_data.append(val)
-    return gold_data
-
-
-def generate_votes_gt(items_num, filters_select, items_per_worker, worker_tests, workers_accuracy, filters_dif, gt=None):
-    if not gt:
-        gt = generate_gold_data(items_num, filters_select)
-        is_gt_genereated = True
-    else:
-        is_gt_genereated = False
-    workers_accuracy_neg, workers_accuracy_pos = workers_accuracy
-
-    # generate votes
-    # on a page a worker see items_per_worker tasks (crowdflower style)
-    pages_num = items_num // items_per_worker
-    filters_num = len(filters_select)
-    votes = {}
-    for item_filter_index in range(pages_num*items_per_worker*filters_num):
-        votes[item_filter_index] = {}
-    for page_index in range(pages_num):
-        for i in range(worker_tests):
-            worker_id = page_index * worker_tests + i
-            w_acc_pos = workers_accuracy_pos.pop()
-            workers_accuracy[1].insert(0, w_acc_pos)
-            w_acc_neg = workers_accuracy_neg.pop()
-            workers_accuracy[0].insert(0, w_acc_neg)
-            for item_index in range(page_index*items_per_worker, page_index*items_per_worker + items_per_worker):
-                filter_item_indices = range(item_index*filters_num, item_index*filters_num + filters_num)
-                is_item_pos = sum([gt[i] for i in filter_item_indices]) == 0
-                if is_item_pos:
-                    worker_acc = w_acc_pos
-                else:
-                    worker_acc = w_acc_neg
-                for item_filter_index, f_diff in zip(filter_item_indices, filters_dif):
-                    if np.random.binomial(1, worker_acc*f_diff if worker_acc*f_diff <= 1. else 1.):
-                        vote = gt[item_filter_index]
-                    else:
-                        vote = 1 - gt[item_filter_index]
-                    votes[item_filter_index][worker_id] = [vote]
-    if is_gt_genereated:
-        return votes, gt
-    else:
-        return votes
-
-
-def compute_metrics(items, gt, lr, filters_num):
-    # obtain ground_truth scope values for items
-    gt_scope = []
-    for item_index in range(len(items)):
-        if sum([gt[item_index*filters_num + filter_index] for filter_index in range(filters_num)]):
-            gt_scope.append(0)
-        else:
-            gt_scope.append(1)
-    # Positive == Inclusion (Relevant)
-    # Negative == Exclusion (Not relevant)
-    fp = 0.
-    fn = 0.
-    tp = 0.
-    tn = 0.
-    for cl_val, gt_val in zip(items, gt_scope):
-        if gt_val and not cl_val:
-            fn += 1
-        if not gt_val and cl_val:
-            fp += 1
-        if gt_val and cl_val:
-            tp += 1
-        if not gt_val and not cl_val:
-            tn += 1
-    recall = 100 * tp / (tp + fn)
-    precision = 100 * tp / (tp + fp)
-    loss = (fn * lr + fp) / len(items)
-    beta = 1. / lr
-    f_beta = (beta + 1) * precision * recall / (beta * recall + precision)
-    return loss, recall, precision, f_beta, fp
-
+                gt_scope.append(1)
+        # Positive == Inclusion (Relevant)
+        # Negative == Exclusion (Not relevant)
+        fp = 0.
+        fn = 0.
+        tp = 0.
+        tn = 0.
+        for cl_val, gt_val in zip(items, gt_scope):
+            if gt_val and not cl_val:
+                fn += 1
+            if not gt_val and cl_val:
+                fp += 1
+            if gt_val and cl_val:
+                tp += 1
+            if not gt_val and not cl_val:
+                tn += 1
+        recall = 100 * tp / (tp + fn)
+        precision = 100 * tp / (tp + fp)
+        loss = (fn * lr + fp) / len(items)
+        beta = 1. / lr
+        f_beta = (beta + 1) * precision * recall / (beta * recall + precision)
+        return loss, recall, precision, f_beta, fp

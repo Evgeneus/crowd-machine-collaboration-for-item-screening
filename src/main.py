@@ -3,8 +3,8 @@ import pandas as pd
 
 from src.screening_algorithms.helpers.utils import Generator
 from src.screening_algorithms.helpers.utils import Workers
-from src.screening_algorithms.machine_ensemble import machine_ensemble
-from src.screening_algorithms.s_run import s_run_algorithm
+from src.screening_algorithms.machine_ensemble import MachineEnsemble
+from src.screening_algorithms.s_run import SRun
 
 '''
 z - proportion of cheaters
@@ -70,13 +70,15 @@ if __name__ == '__main__':
         # quiz, generation votes
         # workers = Workers(worker_tests, z)
         workers_accuracy = Workers(worker_tests, z).simulate_workers()
-        params.update({'workers_accuracy': workers_accuracy})
+        params.update({'workers_accuracy': workers_accuracy,
+                       'ground_truth': None
+                       })
 
-        _, ground_truth = Generator(params).generate_votes_gt()
+        _, ground_truth = Generator(params).generate_votes_gt(items_num)
         params.update({'ground_truth': ground_truth})
 
         # s-run
-        loss_smrun, cost_smrun, rec_sm_, pre_sm_, f_beta_sm = s_run_algorithm(params)
+        loss_smrun, cost_smrun, rec_sm_, pre_sm_, f_beta_sm = SRun(params).run()
         loss_smrun_list.append(loss_smrun)
         cost_smrun_list.append(cost_smrun)
         rec_sm.append(rec_sm_)
@@ -112,9 +114,11 @@ if __name__ == '__main__':
             for _ in range(iter_num):
                 # quiz, generation votes
                 workers_accuracy = Workers(worker_tests, z).simulate_workers()
-                params.update({'workers_accuracy': workers_accuracy})
+                params.update({'workers_accuracy': workers_accuracy,
+                               'ground_truth': None
+                               })
 
-                _, ground_truth = Generator(params).generate_votes_gt()
+                _, ground_truth = Generator(params).generate_votes_gt(items_num)
                 params.update({'ground_truth': ground_truth})
 
                 params.update({
@@ -126,7 +130,7 @@ if __name__ == '__main__':
                 })
 
                 # machine ensemble
-                loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos = machine_ensemble(params)
+                loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos = MachineEnsemble(params).run()
                 loss_me_list.append(loss_me)
                 rec_me.append(rec_me_)
                 pre_me.append(pre_me_)
@@ -135,7 +139,7 @@ if __name__ == '__main__':
                 # s-run with machine prior
                 params['prior_prob_pos'] = prior_prob_pos
 
-                loss_h, cost_h, rec_h_, pre_h_, f_beta_h = s_run_algorithm(params)
+                loss_h, cost_h, rec_h_, pre_h_, f_beta_h = SRun(params).run()
                 loss_h_list.append(loss_h)
                 cost_h_list.append(cost_h)
                 rec_h.append(rec_h_)
