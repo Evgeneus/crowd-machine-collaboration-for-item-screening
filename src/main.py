@@ -41,7 +41,6 @@ if __name__ == '__main__':
     filters_select = [0.14, 0.14, 0.28, 0.42]
     filters_dif = [1., 1., 1.1, 0.9]
     iter_num = 50
-    stop_score = 15
     data = []
 
     # for theta in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]:
@@ -61,7 +60,7 @@ if __name__ == '__main__':
         'worker_tests': worker_tests,
         'lr': lr,
         'expert_cost': expert_cost,
-        'stop_score': stop_score
+        'stop_score': 30
     }
 
     # S-run algorithm
@@ -128,7 +127,8 @@ if __name__ == '__main__':
                     'machine_tests': machine_tests,
                     'select_conf': select_conf,
                     'ground_truth': ground_truth,
-                    'workers_accuracy': workers_accuracy
+                    'workers_accuracy': workers_accuracy,
+                    'stop_score': 15
                 })
 
                 # machine ensemble
@@ -171,9 +171,9 @@ if __name__ == '__main__':
                          machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
                          theta, filters_num])
 
-    # pd.DataFrame(data,
-    #              columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
-    #                       'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
-    #                       'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
-    #                       'total_items', 'expert_cost', 'theta', 'filetrs_num']
-    #              ).to_csv('../data/output_data/figXXX.csv', index=False)
+    pd.DataFrame(data,
+                 columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
+                          'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
+                          'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
+                          'total_items', 'expert_cost', 'theta', 'filetrs_num']
+                 ).to_csv('../data/output_data/figXXX.csv', index=False)
