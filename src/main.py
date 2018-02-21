@@ -25,7 +25,7 @@ iter_num - number of iterations for averaging results
 
 if __name__ == '__main__':
     z = 0.3
-    items_num = 1000
+    items_num = 5000
     items_per_worker = 10
     baseround_items = 20  # must be a multiple of items_per_worker
     if baseround_items % items_per_worker:
@@ -39,10 +39,31 @@ if __name__ == '__main__':
     filters_num = 4
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
-    filters_dif = [1., 1., 1.1, 0.9]
+    # filters_dif = [1., 1., 1.1, 0.9]  # old difficulty
+    filters_dif = [0.9, 1., 1.1, 1.]
     iter_num = 50
     data = []
 
+    # # ------------------------
+    # # experiment on theta
+    # for theta, x in zip([0.05, 0.1], [0.26, 0.23]):
+    # for theta, x in zip([0.2, 0.4, 0.5], [0.18, 0.11, 0.09]):
+
+    # # ------------------------
+    # # experiment on a filter
+    # filters_select_list = [[0.14, 0.14, 0.14, 0.56],  # High select
+    #                        [0.14, 0.14, 0.14, 0.56],  # High select
+    #                        [0.25, 0.25, 0.25, 0.098],  # Low select
+    #                        [0.25, 0.25, 0.25, 0.098]]  # Low select
+    # filters_dif_list = [[1., 1., 1., 1.2],  # High accurate
+    #                     [1., 1., 1., 0.7],  # Low accurate
+    #                     [1., 1., 1., 1.2],  # High accurate
+    #                     [1., 1., 1., 0.7]]  # Low accurate
+    # labels = ['High Select/High Acc', 'High Select/Low Acc', 'Low Select/High Acc', 'Low Select/Low Acc']
+    # for filters_select, filters_dif, label in zip(filters_select_list, filters_dif_list, labels):
+    #     print(label)
+
+    # # ------------------------
     # for theta in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]:
     # for filters_num in [1, 2, 3, 4, 5]:
     #     pow = 1 - theta**(1/filters_num)
@@ -175,5 +196,5 @@ if __name__ == '__main__':
                  columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
                           'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
-                          'total_items', 'expert_cost', 'theta', 'filetrs_num']
-                 ).to_csv('../data/output_data/figXXX.csv', index=False)
+                          'total_items', 'expert_cost', 'theta', 'filetrs_num', 'label']
+                 ).to_csv('../data/output_data/fig_balances_acc_select.csv', index=False)
