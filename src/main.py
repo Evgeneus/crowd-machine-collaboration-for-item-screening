@@ -25,7 +25,7 @@ iter_num - number of iterations for averaging results
 
 if __name__ == '__main__':
     z = 0.3
-    items_num = 5000
+    items_num = 1000
     items_per_worker = 10
     baseround_items = 20  # must be a multiple of items_per_worker
     if baseround_items % items_per_worker:
@@ -196,5 +196,5 @@ if __name__ == '__main__':
                  columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
                           'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
-                          'total_items', 'expert_cost', 'theta', 'filetrs_num', 'label']
-                 ).to_csv('../data/output_data/fig_balances_acc_select.csv', index=False)
+                          'total_items', 'expert_cost', 'theta', 'filetrs_num']
+                 ).to_csv('../data/output_data/figXXX.csv', index=False)
