@@ -210,5 +210,5 @@ if __name__ == '__main__':
                  columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
                           'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
-                          'total_items', 'expert_cost', 'theta', 'filetrs_num']
+                          'total_items', 'expert_cost', 'theta', 'filters_num']
                  ).to_csv('../data/output_data/figXXX.csv', index=False)
