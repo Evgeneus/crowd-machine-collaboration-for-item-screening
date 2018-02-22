@@ -4,6 +4,7 @@ import pandas as pd
 from src.screening_algorithms.helpers.utils import Generator
 from src.screening_algorithms.helpers.utils import Workers
 from src.screening_algorithms.machine_ensemble import MachineEnsemble
+from src.screening_algorithms.stacking_ensemble import StackingEnsemble
 from src.screening_algorithms.s_run import SRun
 
 '''
@@ -167,6 +168,7 @@ if __name__ == '__main__':
                 })
 
                 # machine ensemble
+                # loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos = StackingEnsemble(params).run()
                 loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos = MachineEnsemble(params).run()
                 loss_me_list.append(loss_me)
                 rec_me.append(rec_me_)
