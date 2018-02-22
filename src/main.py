@@ -63,6 +63,20 @@ if __name__ == '__main__':
     # for filters_select, filters_dif, label in zip(filters_select_list, filters_dif_list, labels):
     #     print(label)
 
+    # # --------------------
+    # # experiment: number of filters
+    # filters_select_list = [[0.14, 0.14, 0.14, 0.56],
+    #                        [0.15, 0.15, 0.56],
+    #                        [0.16, 0.16*4],
+    #                        [0.3]]
+    # filters_dif_list = [[1.]*4,
+    #                    [1.]*3,
+    #                    [1.]*2
+    #                    [1]]
+    # filters_num_list = [4, 3, 2, 1]
+    # for filters_select, filters_dif, filters_num in zip(filters_select_list, filters_dif_list, labels):
+
+
     # # ------------------------
     # for theta in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]:
     # for filters_num in [1, 2, 3, 4, 5]:
