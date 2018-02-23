@@ -18,6 +18,8 @@ class SRunUtils:
                 filter_select = self.filters_select_est[filter_index]
                 if self.prior_prob_pos:
                     prob_item_neg = 1 - self.prior_prob_pos[item_index * self.filters_num + filter_index]
+                    # prob_item_neg = 1 - 0.3 * self.prior_prob_pos[item_index * self.filters_num + filter_index] - 0.7 * \
+                    #                 self.filters_select_est[filter_index]
                 else:
                     prob_item_neg = self.filters_select_est[filter_index]
                 pos_c, neg_c = self.votes_stats[item_index * self.filters_num + filter_index]
@@ -154,6 +156,10 @@ class SRunUtils:
                 prob_filter_neg = term_neg / (term_pos + term_neg)
                 apply_filters_prob[filter_index].append(prob_filter_neg)
         self.filters_select_est = [np.mean(i) for i in apply_filters_prob]
+        # if self.prior_prob_pos:
+        #     self.filters_select_est = [0.7*np.mean(i) + 0.3*j for i, j in zip(apply_filters_prob, self.machine_filters_select_est)]
+        # else:
+        #     self.filters_select_est = [np.mean(i) for i in apply_filters_prob]
 
     def estimate_filters_property(self, votes, items_num):
         psi = input_adapter(votes)

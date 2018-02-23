@@ -53,14 +53,15 @@ class SRun(Generator, SRunUtils, Metrics):
         self.items_classified.update(items_classified_baseround)
         items_to_classify = items_to_classify + list(range(self.baseround_items, self.items_num))
 
-        # compute prior power
-        if self.prior_prob_pos:
-            self.filters_select_est = [0.] * self.filters_num
-            for item_index in range(self.items_num):
-                for filter_index in range(self.filters_num):
-                    self.filters_select_est[filter_index] += 1 - self.prior_prob_pos[item_index
-                                                               * self.filters_num + filter_index]
-            self.filters_select_est = list(map(lambda x: x / self.items_num, self.filters_select_est))
+        # # compute prior power
+        # if self.prior_prob_pos:
+        #     self.filters_select_est = [0.] * self.filters_num
+        #     for item_index in range(self.items_num):
+        #         for filter_index in range(self.filters_num):
+        #             self.filters_select_est[filter_index] += 1 - self.prior_prob_pos[item_index
+        #                                                        * self.filters_num + filter_index]
+        #     self.filters_select_est = list(map(lambda x: x / self.items_num, self.filters_select_est))
+            # self.machine_filters_select_est = list(map(lambda x: x / self.items_num, self.filters_select_est))
 
         # Do Multi rounds
         while len(items_to_classify) != 0:
