@@ -63,6 +63,11 @@ class StackingEnsemble(MachineEnsemble):
         self.machine_tests = params['machine_tests']
         self.select_conf = params['select_conf']
         self.machines_num = 5
+        # training/validation data
+        self.test_votes = None
+        self.ground_truth_tests = None
+        self.train_pos_num = 0
+        self.train_neg_num = 0
         # metrics to be computed
         self.loss = None
         self.recall = None
@@ -74,11 +79,11 @@ class StackingEnsemble(MachineEnsemble):
         machines_accuracy = self._get_machines()
 
         # generate test data and ground truth values for the tests
-        test_votes, ground_truth_tests = self._generate_test_votes(machines_accuracy)
+        self._generate_test_votes(machines_accuracy)
 
         # create stacking classifier
         meta_clf = MetaClassifier(LogisticRegression(class_weight={1: 1, 0: 10}))
-        meta_clf.fit(test_votes, ground_truth_tests)
+        meta_clf.fit(self.test_votes, self.ground_truth_tests)
 
         votes_list = [[] for _ in range(self.items_num * self.filters_num)]
 
@@ -163,10 +168,5 @@ class StackingEnsemble(MachineEnsemble):
                 else:
                     test_votes[m_id + 1] = []
 
-        return test_votes, ground_truth_tests
-
-
-
-
-
-
+        self.test_votes = test_votes
+        self.ground_truth_tests = ground_truth_tests
