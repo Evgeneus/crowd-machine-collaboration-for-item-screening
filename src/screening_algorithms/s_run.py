@@ -23,6 +23,7 @@ class SRun(Generator, SRunUtils, Metrics):
         self.stop_score = params['stop_score']
         self.prior_prob_pos = params.get('prior_prob_pos')
         self.p_thrs = 0.99
+        self.stacking_clf = params.get('stacking_clf')
 
         # measurements to be computed
         self.filters_list = list(range(self.filters_num))
@@ -65,7 +66,10 @@ class SRun(Generator, SRunUtils, Metrics):
         # Do Multi rounds
         while len(items_to_classify) != 0:
             self.votes_count += len(items_to_classify)
-            filters_assigned, items_to_classify = self.assign_filters(items_to_classify)
+            filters_assigned, items_to_classify, c = self.assign_filters(items_to_classify)
+
+            if c >= 5 and self.stacking_clf:
+                self.prior_prob_pos = self.stacking_clf.retrain(c, c)
 
             votes = self._do_round(items_to_classify, filters_assigned)
             # update votes_stats
@@ -76,6 +80,7 @@ class SRun(Generator, SRunUtils, Metrics):
 
             # classify items
             items_classified_round, items_to_classify = self.classify_items(items_to_classify)
+            # print(sum(items_classified_round.values()), len(items_classified_round.values()))
             self.items_classified.update(items_classified_round)
 
         self.items_classified = [self.items_classified[item_index] for item_index in sorted(self.items_classified.keys())]

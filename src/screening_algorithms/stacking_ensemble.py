@@ -108,7 +108,7 @@ class StackingEnsemble(MachineEnsemble):
         for item_index in range(self.items_num):
             for filter_index in range(self.filters_num):
                 gt = self.ground_truth[item_index * self.filters_num + filter_index]  # can be either 0 or 1
-                vote_prev = self.votes_list[item_index * self.filters_num + filter_index][0]
+                vote_prev = self.votes_list[item_index * self.filters_num + filter_index][-1]
                 for machine_acc in rest_machine_acc:
                     vote = self._generate_vote(gt, machine_acc, vote_prev)
                     self.votes_list[item_index * self.filters_num + filter_index].append(vote)

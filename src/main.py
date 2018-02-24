@@ -133,7 +133,7 @@ if __name__ == '__main__':
                   np.std(rec_sm), np.mean(cost_smrun_list), np.std(cost_smrun_list),
                   np.mean(pre_sm), np.mean(f_sm)))
 
-    for machine_tests in [100]:
+    for machine_tests in [30]:
     # for machine_tests in [15, 20, 30, 40, 50, 100, 150, 200, 500]:
     # for select_conf in [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.99]:
         # Machine and Hybrid algorithms
@@ -168,7 +168,8 @@ if __name__ == '__main__':
                     'select_conf': select_conf,
                     'ground_truth': ground_truth,
                     'workers_accuracy': workers_accuracy,
-                    'stop_score': 15
+                    'stop_score': 15,
+                    'stacking_clf': None
                 })
 
                 # machine ensemble
@@ -190,7 +191,9 @@ if __name__ == '__main__':
                 f_h.append(f_beta_h)
 
                 # s-run with machine prior (stacking)
-                params['prior_prob_pos'] = StackingEnsemble(params).run()[4]
+                stacking_clf = StackingEnsemble(params)
+                params['stacking_clf'] = stacking_clf
+                params['prior_prob_pos'] = stacking_clf.run()[4]
 
                 loss_hs, cost_hs, rec_hs_, pre_hs_, f_beta_hs = SRun(params).run()
                 loss_hs_list.append(loss_hs)
@@ -238,4 +241,4 @@ if __name__ == '__main__':
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
                           'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
                           'total_items', 'expert_cost', 'theta', 'filters_num']
-                 ).to_csv('../data/output_data/figXXX.csv', index=False)
+                 ).to_csv('../data/output_data/fig8_al', index=False)

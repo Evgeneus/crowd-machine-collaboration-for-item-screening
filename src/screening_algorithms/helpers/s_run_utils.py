@@ -7,6 +7,7 @@ from src.fusion_algorithms.em import expectation_maximization
 class SRunUtils:
 
     def assign_filters(self, items):
+        c = 0
         filters_assigned = []
         items_new = []
         for item_index in items:
@@ -46,8 +47,10 @@ class SRunUtils:
             if n_min / joint_prob < self.stop_score:
                 filters_assigned.append(filter_)
                 items_new.append(item_index)
+            else:
+                c += 1
 
-        return filters_assigned, items_new
+        return filters_assigned, items_new, c
 
     def classify_items_baseround(self, values_prob):
         items_classified = {}
