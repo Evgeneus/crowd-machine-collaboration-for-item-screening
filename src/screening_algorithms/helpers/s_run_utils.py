@@ -105,10 +105,10 @@ class SRunUtils:
         workers_num = 1 if self.items_num < self.items_per_worker else self.items_num // self.items_per_worker
         for worker_index in range(workers_num):
             # get worker's accuracy
-            worker_acc_pos = self.workers_accuracy[1].pop()
-            self.workers_accuracy[1].insert(0, worker_acc_pos)
-            worker_acc_neg = self.workers_accuracy[0].pop()
-            self.workers_accuracy[0].insert(0, worker_acc_neg)
+            # worker_acc_pos = self.workers_accuracy[1].pop()
+            # self.workers_accuracy[1].insert(0, worker_acc_pos)
+            # worker_acc_neg = self.workers_accuracy[0].pop()
+            # self.workers_accuracy[0].insert(0, worker_acc_neg)
 
             filter_item_pair = zip(filters_assigned[worker_index*self.items_per_worker:
                                    worker_index*self.items_per_worker + self.items_per_worker],
@@ -118,15 +118,23 @@ class SRunUtils:
                 # update the worker's accuracy on the current item
                 is_item_pos = sum(self.ground_truth[item_index*self.filters_num:
                               item_index*self.filters_num + self.filters_num]) == 0
-                if is_item_pos:
-                    worker_acc = worker_acc_pos
-                else:
-                    worker_acc = worker_acc_neg
+                # if is_item_pos:
+                #     worker_acc = worker_acc_pos
+                # else:
+                #     worker_acc = worker_acc_neg
+
+                if is_item_pos and filter_index == 0:
+                    worker_acc = np.random.beta(1.16, 0.17)
+                if is_item_pos and filter_index == 1:
+                    worker_acc = np.random.beta(2.4, 0.24)
+                if not is_item_pos and filter_index == 0:
+                    worker_acc = np.random.beta(5.35, 1.17)
+                if not is_item_pos and filter_index == 1:
+                    worker_acc = np.random.beta(0.48, 0.2)
 
                 # generate vote
                 value_gt = self.ground_truth[item_index*self.filters_num + filter_index]
-                cr_dif = self.filters_dif[filter_index]
-                if np.random.binomial(1, worker_acc*cr_dif if worker_acc*cr_dif <= 1. else 1.):
+                if np.random.binomial(1, worker_acc):
                     vote = value_gt
                 else:
                     vote = 1 - value_gt

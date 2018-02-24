@@ -1,5 +1,10 @@
 import numpy as np
 
+def get_ab(m, s):
+    a = ((1-m)/s**2 - 1/m)*m**2
+    b = a*(1/m - 1)
+    return a, b
+
 
 class Workers:
 
@@ -57,7 +62,7 @@ class Generator:
             is_gt_generated = True
         else:
             is_gt_generated = False
-        workers_accuracy_neg, workers_accuracy_pos = self.workers_accuracy
+        # workers_accuracy_neg, workers_accuracy_pos = self.workers_accuracy
 
         # generate votes
         # on a page a worker see items_per_worker tasks (crowdflower style)
@@ -68,21 +73,30 @@ class Generator:
         for page_index in range(pages_num):
             for i in range(self.votes_per_item):
                 worker_id = page_index * self.votes_per_item + i
-                w_acc_pos = workers_accuracy_pos.pop()
-                self.workers_accuracy[1].insert(0, w_acc_pos)
-                w_acc_neg = workers_accuracy_neg.pop()
-                self.workers_accuracy[0].insert(0, w_acc_neg)
+                # w_acc_pos = workers_accuracy_pos.pop()
+                # self.workers_accuracy[1].insert(0, w_acc_pos)
+                # w_acc_neg = workers_accuracy_neg.pop()
+                # self.workers_accuracy[0].insert(0, w_acc_neg)
                 for item_index in range(page_index * self.items_per_worker,
                                         page_index * self.items_per_worker + self.items_per_worker):
                     filter_item_indices = range(item_index * self.filters_num,
                                                 item_index * self.filters_num + self.filters_num)
                     is_item_pos = sum([self.ground_truth[i] for i in filter_item_indices]) == 0
-                    if is_item_pos:
-                        worker_acc = w_acc_pos
-                    else:
-                        worker_acc = w_acc_neg
-                    for item_filter_index, f_diff in zip(filter_item_indices, self.filters_dif):
-                        if np.random.binomial(1, worker_acc * f_diff if worker_acc * f_diff <= 1. else 1.):
+                    # if is_item_pos:
+                    #     worker_acc = w_acc_pos
+                    # else:
+                    #     worker_acc = w_acc_neg
+                    for item_filter_index, f_diff, filter in zip(filter_item_indices, self.filters_dif, [0, 1]):
+                        if is_item_pos and filter == 0:
+                            worker_acc = np.random.beta(1.16, 0.17)
+                        if is_item_pos and filter == 1:
+                            worker_acc = np.random.beta(2.4, 0.24)
+                        if not is_item_pos and filter == 0:
+                            worker_acc = np.random.beta(5.35, 1.17)
+                        if not is_item_pos and filter == 1:
+                            worker_acc = np.random.beta(0.48, 0.2)
+
+                        if np.random.binomial(1, worker_acc):
                             vote = self.ground_truth[item_filter_index]
                         else:
                             vote = 1 - self.ground_truth[item_filter_index]
