@@ -5,6 +5,7 @@ from src.screening_algorithms.helpers.utils import Generator
 from src.screening_algorithms.helpers.utils import Workers
 from src.screening_algorithms.machine_ensemble import MachineEnsemble
 from src.screening_algorithms.s_run import SRun
+from src.screening_algorithms.stacking_ensemble import StackingEnsemble
 
 '''
 z - proportion of cheaters
@@ -39,9 +40,8 @@ if __name__ == '__main__':
     filters_num = 4
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
-    # filters_dif = [1., 1., 1.1, 0.9]  # old difficulty
     filters_dif = [0.9, 1., 1.1, 1.]
-    iter_num = 50
+    iter_num = 1
     data = []
 
     # # ------------------------
@@ -147,6 +147,10 @@ if __name__ == '__main__':
             cost_h_list = []
             rec_h, pre_h, f_h, f_h = [], [], [], []
 
+            loss_hs_list = []
+            cost_hs_list = []
+            rec_hs, pre_hs, f_hs, f_hs = [], [], [], []
+
             for _ in range(iter_num):
                 # quiz, generation votes
                 workers_accuracy = Workers(worker_tests, z).simulate_workers()
@@ -183,6 +187,16 @@ if __name__ == '__main__':
                 pre_h.append(pre_h_)
                 f_h.append(f_beta_h)
 
+                # s-run with machine prior (stacking)
+                params['prior_prob_pos'] = StackingEnsemble(params).run()[4]
+
+                loss_hs, cost_hs, rec_hs_, pre_hs_, f_beta_hs = SRun(params).run()
+                loss_hs_list.append(loss_hs)
+                cost_hs_list.append(cost_hs)
+                rec_hs.append(rec_hs_)
+                pre_hs.append(pre_hs_)
+                f_hs.append(f_beta_hs)
+
             # print results
             print('ME-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
                   'precision: {:1.3f}, f_b: {}'
@@ -193,6 +207,11 @@ if __name__ == '__main__':
                   'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
                   .format(np.mean(loss_h_list), np.std(loss_h_list), np.mean(rec_h), np.std(rec_h),
                           np.mean(cost_h_list), np.std(cost_h_list), np.mean(pre_h), np.mean(f_h)))
+
+            print('HS-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+                  'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
+                  .format(np.mean(loss_hs_list), np.std(loss_hs_list), np.mean(rec_hs), np.std(rec_hs),
+                          np.mean(cost_hs_list), np.std(cost_hs_list), np.mean(pre_hs), np.mean(f_hs)))
             print('---------------------')
 
             data.append([worker_tests, worker_tests, lr, np.mean(loss_me_list), np.std(loss_me_list), 0.,
@@ -202,6 +221,12 @@ if __name__ == '__main__':
 
             data.append([worker_tests, worker_tests, lr, np.mean(loss_h_list), np.std(loss_h_list),
                          np.mean(cost_h_list), np.std(cost_h_list), 'Hybrid-Ensemble', np.mean(rec_h),
+                         np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
+                         machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
+                         theta, filters_num])
+
+            data.append([worker_tests, worker_tests, lr, np.mean(loss_hs_list), np.std(loss_hs_list),
+                         np.mean(cost_hs_list), np.std(cost_hs_list), 'Stacking-Ensemble', np.mean(rec_hs),
                          np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
                          machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
                          theta, filters_num])
