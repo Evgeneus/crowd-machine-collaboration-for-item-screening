@@ -43,7 +43,7 @@ class MachineEnsemble(Metrics):
         for item_index in range(self.items_num):
             for filter_index in range(self.filters_num):
                 gt = self.ground_truth[item_index * self.filters_num + filter_index]  # can be either 0 or 1
-                vote_prev = votes_list[item_index * self.filters_num + filter_index][0]
+                vote_prev = votes_list[item_index * self.filters_num + filter_index][-1]
                 for machine_acc in rest_machine_acc:
                     vote = self._generate_vote(gt, machine_acc, vote_prev)
                     votes_list[item_index * self.filters_num + filter_index].append(vote)
@@ -73,7 +73,7 @@ class MachineEnsemble(Metrics):
         for m_id, acc in enumerate(machines_acc[1:]):
             for i in range(self.machine_tests):
                 if np.random.binomial(1, self.corr):
-                    vote = test_votes[0][i]
+                    vote = test_votes[m_id][i]
                 else:
                     vote = np.random.binomial(1, acc)
                 test_votes[m_id + 1].append(vote)
