@@ -14,7 +14,7 @@ class MachineEnsemble(Metrics):
         self.corr = params['corr']
         self.machine_tests = params['machine_tests']
         self.select_conf = params['select_conf']
-        self.machines_num = 10
+        self.machines_num = params['machines_num']
         # metrics to be computed
         self.loss = None
         self.recall = None

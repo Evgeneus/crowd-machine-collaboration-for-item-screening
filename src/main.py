@@ -35,6 +35,7 @@ if __name__ == '__main__':
     worker_tests = 5
     votes_per_item = 3
     machine_tests = 50
+    machines_num = 10
     lr = 10
     expert_cost = 20
     filters_num = 4
@@ -120,6 +121,7 @@ if __name__ == '__main__':
             params.update({
                 'corr': corr,
                 'machine_tests': machine_tests,
+                'machines_num': machines_num,
                 'select_conf': select_conf,
                 'ground_truth': ground_truth,
                 'workers_accuracy': workers_accuracy,
