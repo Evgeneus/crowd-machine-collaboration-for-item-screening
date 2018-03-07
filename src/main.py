@@ -44,6 +44,8 @@ if __name__ == '__main__':
     iter_num = 50
     data = []
 
+    # NEEDS TO CHECK STAKING, I. E., MACHINE SELECTION !!!!!
+
     # # ------------------------
     # # experiment on theta
     # for theta, x in zip([0.05, 0.1], [0.26, 0.23]):
