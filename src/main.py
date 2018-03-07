@@ -41,7 +41,7 @@ if __name__ == '__main__':
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
     filters_dif = [0.9, 1., 1.1, 1.]
-    iter_num = 1
+    iter_num = 50
     data = []
 
     # # ------------------------

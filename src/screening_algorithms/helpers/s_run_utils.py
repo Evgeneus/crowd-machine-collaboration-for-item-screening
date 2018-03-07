@@ -18,8 +18,6 @@ class SRunUtils:
                 filter_select = self.filters_select_est[filter_index]
                 if self.prior_prob_pos:
                     prob_item_neg = 1 - self.prior_prob_pos[item_index * self.filters_num + filter_index]
-                    # prob_item_neg = 1 - 0.3 * self.prior_prob_pos[item_index * self.filters_num + filter_index] - 0.7 * \
-                    #                 self.filters_select_est[filter_index]
                 else:
                     prob_item_neg = self.filters_select_est[filter_index]
                 pos_c, neg_c = self.votes_stats[item_index * self.filters_num + filter_index]
@@ -156,10 +154,6 @@ class SRunUtils:
                 prob_filter_neg = term_neg / (term_pos + term_neg)
                 apply_filters_prob[filter_index].append(prob_filter_neg)
         self.filters_select_est = [np.mean(i) for i in apply_filters_prob]
-        # if self.prior_prob_pos:
-        #     self.filters_select_est = [0.7*np.mean(i) + 0.3*j for i, j in zip(apply_filters_prob, self.machine_filters_select_est)]
-        # else:
-        #     self.filters_select_est = [np.mean(i) for i in apply_filters_prob]
 
     def estimate_filters_property(self, votes, items_num):
         psi = input_adapter(votes)
@@ -177,3 +171,37 @@ class SRunUtils:
             filter_select /= self.baseround_items
             self.filters_select_est.append(filter_select)
             self.filters_acc_est.append(filter_acc)
+
+# # a low accurate criteria
+# def generate_responses(GT, papers_ids, criteria_num, papers_worker, acc, criteria_difficulty, cr_assigned):
+#     responses = []
+#     n = len(papers_ids)
+#     workers_n = 1 if n < papers_worker else n // papers_worker
+#     for w_ind in range(workers_n):
+#         worker_acc_in = acc[1].pop()
+#         acc[1].insert(0, worker_acc_in)
+#         worker_acc_out = acc[0].pop()
+#         acc[0].insert(0, worker_acc_out)
+#         for cr, p_id in zip(cr_assigned[w_ind*papers_worker: w_ind*papers_worker+papers_worker],
+#                             papers_ids[w_ind*papers_worker: w_ind*papers_worker+papers_worker]):
+#             cr_vals_id = range(p_id * criteria_num, p_id * criteria_num + criteria_num, 1)
+#             isPaperIN = sum([GT[i] for i in cr_vals_id]) == 0
+#             if isPaperIN:
+#                 worker_acc = worker_acc_in
+#             else:
+#                 worker_acc = worker_acc_out
+#
+#             GT_cr = GT[p_id * criteria_num + cr]
+#             cr_dif = criteria_difficulty[cr]
+#             if cr_dif < 1.:
+#                 if np.random.binomial(1, 0.55):
+#                     vote = GT_cr
+#                 else:
+#                     vote = 1 - GT_cr
+#             else:
+#                 if np.random.binomial(1, worker_acc * cr_dif if worker_acc * cr_dif <= 1. else 1.):
+#                     vote = GT_cr
+#                 else:
+#                     vote = 1 - GT_cr
+#             responses.append(vote)
+#     return responses
