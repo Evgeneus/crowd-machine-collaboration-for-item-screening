@@ -57,7 +57,7 @@ class MachineEnsemble(Metrics):
         self.recall = metrics[1]
         self.precision = metrics[2]
         self.f_beta = metrics[3]
-        return self.loss, self.recall, self.precision, self.f_beta, ensembled_votes
+        return self.loss, self.recall, self.precision, self.f_beta, ensembled_votes, machines_accuracy
 
     def _get_machines(self):
         test_votes = [[] for _ in range(self.machines_num)]

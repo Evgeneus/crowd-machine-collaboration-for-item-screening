@@ -93,7 +93,8 @@ if __name__ == '__main__':
                   np.mean(pre_sm), np.mean(f_sm)))
 
     # Machine and Hybrid algorithms
-    for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
+    # for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
+    for corr in [0.0, 0.2, 0.9]:
         print('Theta: {}, filters_num: {}, Corr: {}, test_num: {}, baseround_items: {}, lr: {},'
               ' select_conf: {}, expert_vote_cost: {}'.
               format(theta, filters_num, corr, machine_tests, baseround_items, lr, select_conf, expert_cost))
@@ -129,7 +130,7 @@ if __name__ == '__main__':
             })
 
             # machine ensemble
-            loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos = MachineEnsemble(params).run()
+            loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos, machines_accuracy = MachineEnsemble(params).run()
             loss_me_list.append(loss_me)
             rec_me.append(rec_me_)
             pre_me.append(pre_me_)
@@ -146,7 +147,7 @@ if __name__ == '__main__':
             f_h.append(f_beta_h)
 
             # s-run with machine prior (stacking)
-            params['prior_prob_pos'] = StackingEnsemble(params).run()[4]
+            params['prior_prob_pos'] = StackingEnsemble(params).run(machines_accuracy)[4]
 
             loss_hs, cost_hs, rec_hs_, pre_hs_, f_beta_hs = SRun(params).run()
             loss_hs_list.append(loss_hs)
