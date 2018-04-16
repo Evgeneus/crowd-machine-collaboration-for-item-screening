@@ -14,7 +14,7 @@ class MachineEnsemble(Metrics):
         self.corr = params['corr']
         self.machine_tests = params['machine_tests']
         self.select_conf = params['select_conf']
-        self.machines_num = 10
+        self.machines_num = 5
         # metrics to be computed
         self.loss = None
         self.recall = None
@@ -109,7 +109,7 @@ class MachineEnsemble(Metrics):
                 else:
                     test_votes[m_id + 1] = []
 
-            return machines_accuracy, estimated_acc
+        return machines_accuracy, estimated_acc
 
 
     # def _get_machines(self):
