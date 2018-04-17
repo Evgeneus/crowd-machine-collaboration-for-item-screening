@@ -75,7 +75,7 @@ class StackingEnsemble(MachineEnsemble):
         test_votes, ground_truth_tests = self._generate_test_votes(machines_accuracy)
 
         # create stacking classifier
-        meta_clf = MetaClassifier(LogisticRegression(class_weight={1: 1, 0: 1}))
+        meta_clf = MetaClassifier(LogisticRegression(class_weight={1: 1, 0: 10}))
         meta_clf.fit(test_votes, ground_truth_tests)
 
         votes_list = [[] for _ in range(self.items_num * self.filters_num)]

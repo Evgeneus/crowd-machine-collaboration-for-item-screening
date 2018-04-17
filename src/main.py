@@ -93,8 +93,7 @@ if __name__ == '__main__':
                   np.mean(pre_sm), np.mean(f_sm)))
 
     # Machine and Hybrid algorithms
-    # for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
-    for corr in [0.0, 0.2, 0.9]:
+    for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
         print('Theta: {}, filters_num: {}, Corr: {}, test_num: {}, baseround_items: {}, lr: {},'
               ' select_conf: {}, expert_vote_cost: {}'.
               format(theta, filters_num, corr, machine_tests, baseround_items, lr, select_conf, expert_cost))
