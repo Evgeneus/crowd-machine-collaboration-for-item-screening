@@ -11,10 +11,10 @@ class MachineEnsemble(Metrics):
         self.items_num = params['items_num']
         self.ground_truth = params['ground_truth']
         self.lr = params['lr']
-        self.corr = params['corr']
+        self.machines_num = params['machines_num']
+        self.corr = [0.]*(self.machines_num//2) + [params['corr']]*(self.machines_num//2)
         self.machine_tests = params['machine_tests']
         self.select_conf = params['select_conf']
-        self.machines_num = params['machines_num']
         # metrics to be computed
         self.loss = None
         self.recall = None
@@ -44,8 +44,8 @@ class MachineEnsemble(Metrics):
             for filter_index in range(self.filters_num):
                 gt = self.ground_truth[item_index * self.filters_num + filter_index]  # can be either 0 or 1
                 vote_prev = votes_list[item_index * self.filters_num + filter_index][-1]
-                for machine_acc in rest_machine_acc:
-                    vote = self._generate_vote(gt, machine_acc, vote_prev)
+                for m_id, machine_acc in enumerate(rest_machine_acc):
+                    vote = self._generate_vote(gt, machine_acc, vote_prev, m_id)
                     votes_list[item_index * self.filters_num + filter_index].append(vote)
 
         # ensemble votes for each filter and item
@@ -71,8 +71,9 @@ class MachineEnsemble(Metrics):
 
         # generate votes for the rest machines to be tested
         for m_id, acc in enumerate(machines_acc[1:]):
+            m_corr = self.corr[m_id+1]
             for i in range(self.machine_tests):
-                if np.random.binomial(1, self.corr):
+                if np.random.binomial(1, m_corr):
                     vote = test_votes[m_id][i]
                 else:
                     vote = np.random.binomial(1, acc)
@@ -96,11 +97,13 @@ class MachineEnsemble(Metrics):
             m_acc = np.random.uniform(0.55, 0.9)
             selected_machines_acc.append(m_acc)
             estimated_acc.append(m_acc)
-
+        if len(selected_machines_acc) < 5:
+            print('<5')
         return selected_machines_acc, estimated_acc
 
-    def _generate_vote(self, gt, acc, vote_prev):
-        if np.random.binomial(1, self.corr, 1)[0]:
+    def _generate_vote(self, gt, acc, vote_prev, m_id):
+        m_corr = self.corr[m_id+1]
+        if np.random.binomial(1, m_corr, 1)[0]:
             vote = vote_prev
         else:
             if np.random.binomial(1, acc):

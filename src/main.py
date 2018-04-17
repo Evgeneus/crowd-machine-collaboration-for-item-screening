@@ -145,15 +145,15 @@ if __name__ == '__main__':
             pre_h.append(pre_h_)
             f_h.append(f_beta_h)
 
-            # s-run with machine prior (stacking)
-            params['prior_prob_pos'] = StackingEnsemble(params).run(machines_accuracy)[4]
-
-            loss_hs, cost_hs, rec_hs_, pre_hs_, f_beta_hs = SRun(params).run()
-            loss_hs_list.append(loss_hs)
-            cost_hs_list.append(cost_hs)
-            rec_hs.append(rec_hs_)
-            pre_hs.append(pre_hs_)
-            f_hs.append(f_beta_hs)
+            # # s-run with machine prior (stacking)
+            # params['prior_prob_pos'] = StackingEnsemble(params).run(machines_accuracy)[4]
+            #
+            # loss_hs, cost_hs, rec_hs_, pre_hs_, f_beta_hs = SRun(params).run()
+            # loss_hs_list.append(loss_hs)
+            # cost_hs_list.append(cost_hs)
+            # rec_hs.append(rec_hs_)
+            # pre_hs.append(pre_hs_)
+            # f_hs.append(f_beta_hs)
 
         # print results
         print('ME-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
@@ -166,10 +166,10 @@ if __name__ == '__main__':
               .format(np.mean(loss_h_list), np.std(loss_h_list), np.mean(rec_h), np.std(rec_h),
                       np.mean(cost_h_list), np.std(cost_h_list), np.mean(pre_h), np.mean(f_h)))
 
-        print('HS-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
-              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
-              .format(np.mean(loss_hs_list), np.std(loss_hs_list), np.mean(rec_hs), np.std(rec_hs),
-                      np.mean(cost_hs_list), np.std(cost_hs_list), np.mean(pre_hs), np.mean(f_hs)))
+        # print('HS-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+        #       'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
+        #       .format(np.mean(loss_hs_list), np.std(loss_hs_list), np.mean(rec_hs), np.std(rec_hs),
+        #               np.mean(cost_hs_list), np.std(cost_hs_list), np.mean(pre_hs), np.mean(f_hs)))
         print('---------------------')
 
         data.append([worker_tests, worker_tests, lr, np.mean(loss_me_list), np.std(loss_me_list), 0.,
@@ -183,15 +183,15 @@ if __name__ == '__main__':
                      machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
                      theta, filters_num])
 
-        data.append([worker_tests, worker_tests, lr, np.mean(loss_hs_list), np.std(loss_hs_list),
-                     np.mean(cost_hs_list), np.std(cost_hs_list), 'Stacking-Ensemble', np.mean(rec_hs),
-                     np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
-                     machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
-                     theta, filters_num])
+        # data.append([worker_tests, worker_tests, lr, np.mean(loss_hs_list), np.std(loss_hs_list),
+        #              np.mean(cost_hs_list), np.std(cost_hs_list), 'Stacking-Ensemble', np.mean(rec_hs),
+        #              np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
+        #              machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
+        #              theta, filters_num])
 
-    pd.DataFrame(data,
-                 columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
-                          'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
-                          'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
-                          'total_items', 'expert_cost', 'theta', 'filters_num']
-                 ).to_csv('../data/output_data/figXXX.csv', index=False)
+    # pd.DataFrame(data,
+    #              columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
+    #                       'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
+    #                       'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
+    #                       'total_items', 'expert_cost', 'theta', 'filters_num']
+    #              ).to_csv('../data/output_data/figXXX.csv', index=False)
