@@ -12,7 +12,7 @@ class MachineEnsemble(Metrics):
         self.ground_truth = params['ground_truth']
         self.lr = params['lr']
         self.machines_num = params['machines_num']
-        self.corr = [0.]*(self.machines_num//2) + [params['corr']]*(self.machines_num//2)
+        self.corr = [params['corr']]*(self.machines_num//2) + [0.1, 0., 0.3, 0., 0.1]
         self.machine_tests = params['machine_tests']
         self.select_conf = params['select_conf']
         self.machines_acc = np.random.uniform(0.5, 0.95, self.machines_num)
@@ -79,6 +79,7 @@ class MachineEnsemble(Metrics):
                     vote = np.random.binomial(1, acc)
                 test_votes[m_id + 1].append(vote)
 
+        # accuracy check
         selected_machines_acc = []
         selected_machines_tests = []
         selected_machines_index = []
@@ -101,7 +102,39 @@ class MachineEnsemble(Metrics):
             m_acc = np.random.uniform(0.55, 0.9)
             selected_machines_acc.append(m_acc)
             estimated_acc.append(m_acc)
-        return selected_machines_acc, estimated_acc, selected_machines_index
+
+        #classifier selection correlation check
+        num_cl = len(selected_machines_index)
+        corr_matrix = np.zeros(shape=(num_cl, num_cl))
+        for i in range(num_cl):
+            for j in range(num_cl):
+                #   compute corr
+                f = 0
+                for v1, v2 in zip(selected_machines_tests[i], selected_machines_tests[j]):
+                    if v1 == v2 and v1 == 0:
+                        f += 1
+                corr_matrix[i][j] = f / self.machine_tests
+
+        m_ensemble_acc = []
+        estimated_ensemble_acc = []
+        selected_ensemble_index = []
+
+        # select the most accurate machine
+        most_accurate_index = estimated_acc.index(max(estimated_acc))
+        estimated_ensemble_acc.append(estimated_acc.pop(most_accurate_index))
+        m_ensemble_acc.append(selected_machines_acc.pop(most_accurate_index))
+        selected_ensemble_index.append(selected_machines_index.pop(most_accurate_index))
+
+        corr_list = list(corr_matrix.sum(axis=0))
+        corr_list.pop(most_accurate_index)
+        n = 4 if len(corr_list) >= 4 else len(corr_list)
+        for _ in range(n):
+            ind = corr_list.index(min(corr_list))
+            corr_list.pop(ind)
+            estimated_ensemble_acc.append(estimated_acc.pop(ind))
+            m_ensemble_acc.append(selected_machines_acc.pop(ind))
+            selected_ensemble_index.append(selected_machines_index.pop(ind))
+        return m_ensemble_acc, estimated_ensemble_acc, selected_ensemble_index
 
     def _generate_vote(self, gt, acc, vote_prev, m_index):
         m_corr = self.corr[m_index]
