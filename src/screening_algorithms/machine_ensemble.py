@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import beta
+from random import shuffle
 
 from src.screening_algorithms.helpers.utils import Metrics
 
@@ -114,6 +115,18 @@ class MachineEnsemble(Metrics):
                     if v1 == v2 and v1 == 0:
                         f += 1
                 corr_matrix[i][j] = f / self.machine_tests
+
+
+        # temp = sorted(selected_machines_acc.copy())[-5:]
+        # shuffle(temp)
+        # indexes = [selected_machines_acc.index(acc) for acc in temp]
+        # # for i in indexes:
+        # selected_machines_acc = [selected_machines_acc[i] for i in indexes]
+        # estimated_acc = [estimated_acc[i] for i in indexes]
+        # selected_machines_index = [selected_machines_index[i] for i in indexes]
+        #
+        # return selected_machines_acc, estimated_acc, selected_machines_index
+
 
         m_ensemble_acc = []
         estimated_ensemble_acc = []
