@@ -43,11 +43,54 @@ class SRunUtils:
             n_min = n_min_list[filter_]
             joint_prob = joint_prob_votes_neg[filter_]
 
-            if n_min / joint_prob < self.stop_score:
+            # if n_min / joint_prob < self.stop_score:
+            #     filters_assigned.append(filter_)
+            #     items_new.append(item_index)
+
+            if self.check_stopping_criteria(item_index):
                 filters_assigned.append(filter_)
                 items_new.append(item_index)
 
         return filters_assigned, items_new
+
+    def check_stopping_criteria(self, item_index):
+        N = 50
+        # prob_classifying_pos = 1.
+        for filter_index in self.filters_list:
+            filter_acc = self.filters_acc_est[filter_index]
+            filter_select = self.filters_select_est[filter_index]
+
+            prob_item_neg = filter_select
+            pos_c, neg_c = self.votes_stats[item_index * self.filters_num + filter_index]
+            for i in range(N):
+                # probability of a new value will be negative
+                prob_vote_neg = filter_acc * prob_item_neg + (1 - filter_acc) * (1 - prob_item_neg)
+                is_vote_positive = np.random.binomial(1, 1 - prob_vote_neg)
+                if is_vote_positive == 1:
+                    pos_c += 1
+                elif is_vote_positive == 0:
+                    neg_c += 1
+
+                # update prob_item_neg
+                term_neg = binom(pos_c + neg_c, neg_c) * filter_acc ** (neg_c) \
+                           * (1 - filter_acc) ** pos_c * filter_select
+                term_pos = binom(pos_c + neg_c, pos_c) * filter_acc ** pos_c \
+                           * (1 - filter_acc) ** (neg_c) * (1 - filter_select)
+                prob_item_pos = term_pos * prob_vote_neg / (term_neg + term_pos)
+                prob_item_neg = 1 - prob_item_pos
+
+                if prob_item_neg >= 0.99:
+                    return True
+
+            # prob_classifying_pos *= prob_item_pos
+            # if prob_item_neg >= 0.99:
+            #     return True
+
+        # if 1 - prob_classifying_pos >= 0.99:
+        #     return True
+        # else:
+        #     return False
+        return False
 
     def classify_items_baseround(self, values_prob):
         items_classified = {}
