@@ -72,8 +72,12 @@ class MachineEnsemble(Metrics):
         # generate votes for the rest machines to be tested
         for m_id, acc in enumerate(machines_acc[1:]):
             for i in range(self.machine_tests):
+                is_prev_vote_true = test_votes[m_id][i]
                 if np.random.binomial(1, self.corr):
-                    vote = test_votes[m_id][i]
+                    if not is_prev_vote_true:
+                        vote = is_prev_vote_true
+                    else:
+                        vote = np.random.binomial(1, acc)
                 else:
                     vote = np.random.binomial(1, acc)
                 test_votes[m_id + 1].append(vote)
@@ -100,8 +104,14 @@ class MachineEnsemble(Metrics):
         return selected_machines_acc, estimated_acc
 
     def _generate_vote(self, gt, acc, vote_prev):
-        if np.random.binomial(1, self.corr, 1)[0]:
-            vote = vote_prev
+        if np.random.binomial(1, self.corr):
+            if vote_prev != gt:
+                vote = vote_prev
+            else:
+                if np.random.binomial(1, acc):
+                    vote = gt
+                else:
+                    vote = 1 - gt
         else:
             if np.random.binomial(1, acc):
                 vote = gt

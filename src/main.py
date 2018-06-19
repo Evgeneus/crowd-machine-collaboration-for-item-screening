@@ -34,7 +34,7 @@ if __name__ == '__main__':
     select_conf = 0.95
     worker_tests = 5
     votes_per_item = 3
-    machine_tests = 50
+    machine_tests = 500
     machines_num = 10
     lr = 10
     expert_cost = 20
@@ -194,4 +194,4 @@ if __name__ == '__main__':
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
                           'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
                           'total_items', 'expert_cost', 'theta', 'filters_num']
-                 ).to_csv('../data/output_data/figXXX.csv', index=False)
+                 ).to_csv('../data/output_data/new/fig3_d.csv', index=False)
