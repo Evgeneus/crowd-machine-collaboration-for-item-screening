@@ -194,4 +194,4 @@ if __name__ == '__main__':
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
                           'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
                           'total_items', 'expert_cost', 'theta', 'filters_num']
-                 ).to_csv('../data/output_data/new/fig3_d.csv', index=False)
+                 ).to_csv('../data/output_data/XXX.csv', index=False)
