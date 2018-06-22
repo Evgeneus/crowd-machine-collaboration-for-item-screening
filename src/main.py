@@ -129,7 +129,8 @@ if __name__ == '__main__':
             })
 
             # machine ensemble
-            loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos, machines_accuracy = MachineEnsemble(params).run()
+            loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos, payload_list = MachineEnsemble(params).run()
+            machines_accuracy, estimated_acc, ground_truth_tests, machine_test_votes, votes_list = payload_list
             loss_me_list.append(loss_me)
             rec_me.append(rec_me_)
             pre_me.append(pre_me_)
@@ -146,7 +147,12 @@ if __name__ == '__main__':
             f_h.append(f_beta_h)
 
             # s-run with machine prior (stacking)
-            params['prior_prob_pos'] = StackingEnsemble(params).run(machines_accuracy)[4]
+            params['machines_accuracy'] = machines_accuracy
+            params['estimated_acc'] = estimated_acc
+            params['ground_truth_tests'] = ground_truth_tests
+            params['machine_test_votes'] = machine_test_votes
+            params['votes_list'] = votes_list
+            params['prior_prob_pos'] = StackingEnsemble(params).run()[4]
 
             loss_hs, cost_hs, rec_hs_, pre_hs_, f_beta_hs = SRun(params).run()
             loss_hs_list.append(loss_hs)
