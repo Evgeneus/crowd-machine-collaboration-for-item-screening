@@ -36,6 +36,7 @@ if __name__ == '__main__':
     votes_per_item = 3
     machine_tests = 500
     machines_num = 10
+    machine_acc_range = [0.5, 0.8]
     lr = 10
     expert_cost = 20
     filters_num = 4
@@ -125,6 +126,7 @@ if __name__ == '__main__':
                 'select_conf': select_conf,
                 'ground_truth': ground_truth,
                 'workers_accuracy': workers_accuracy,
+                'machine_acc_range': machine_acc_range,
                 'stop_score': 15
             })
 
@@ -200,4 +202,4 @@ if __name__ == '__main__':
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
                           'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
                           'total_items', 'expert_cost', 'theta', 'filters_num']
-                 ).to_csv('../data/output_data/XXX.csv', index=False)
+                 ).to_csv('../data/output_data/figXXX.csv', index=False)

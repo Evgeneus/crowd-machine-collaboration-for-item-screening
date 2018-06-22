@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.stats import beta
-from random import shuffle
 
 from src.screening_algorithms.helpers.utils import Metrics
 
@@ -16,6 +15,7 @@ class MachineEnsemble(Metrics):
         self.machine_tests = params['machine_tests']
         self.select_conf = params['select_conf']
         self.machines_num = params['machines_num']
+        self.machine_acc_range = params['machine_acc_range']
         # metrics to be computed
         self.loss = None
         self.recall = None
@@ -65,7 +65,7 @@ class MachineEnsemble(Metrics):
         test_votes = [[] for _ in range(self.machines_num)]
 
         # generate accuracy of machines
-        machines_acc = np.random.uniform(0.5, 0.95, self.machines_num)
+        machines_acc = np.random.uniform(self.machine_acc_range[0], self.machine_acc_range[1], self.machines_num)
         # assign max acc for the first machine as the error accumulates with machine number increases
         first_machine_acc = max(machines_acc)
         machines_acc[np.where(machines_acc == first_machine_acc)] = machines_acc[0]
@@ -83,7 +83,6 @@ class MachineEnsemble(Metrics):
         # generate votes for the rest machines to be tested
         for prev_machine_id, acc in enumerate(machines_acc[1:]):
             for i, gt in enumerate(self.ground_truth_tests):
-                # is_prev_vote_true = test_votes[m_id][i]
                 prev_machine_vote = test_votes[prev_machine_id][i]
                 if np.random.binomial(1, self.corr):
                     if gt != prev_machine_vote:
@@ -103,15 +102,16 @@ class MachineEnsemble(Metrics):
             if conf > self.select_conf:
                 selected_machines_acc.append(acc)
                 m_acc = correct_votes_num / self.machine_tests
+                # to avoid border cases
                 if m_acc > 0.95:
                     m_acc = 0.95
                 estimated_acc.append(m_acc)
                 self.machine_test_votes.append(machine_votes)
 
         # check number of machines passed tests
-        # add at least one machine passed tests (accuracy in [0.55, 0.9])
+        # add at least one machine passed tests (accuracy in self.machine_acc_range)
         if len(selected_machines_acc) < 1:
-            m_acc = np.random.uniform(0.55, 0.9)
+            m_acc = np.random.uniform(self.machine_acc_range[0], self.machine_acc_range[1])
             selected_machines_acc.append(m_acc)
             estimated_acc.append(m_acc)
 
