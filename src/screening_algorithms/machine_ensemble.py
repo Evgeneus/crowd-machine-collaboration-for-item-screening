@@ -100,6 +100,13 @@ class MachineEnsemble(Metrics):
             selected_machines_acc.append(m_acc)
             estimated_acc.append(m_acc)
 
+        # # select top k accurate machines
+        # k = 3
+        # estimated_acc_max_indexs = [estimated_acc.index(i) for i in sorted(estimated_acc)[:k]]
+        # selected_machines_acc = [selected_machines_acc[i] for i in estimated_acc_max_indexs]
+        # estimated_acc = [estimated_acc[i] for i in estimated_acc_max_indexs]
+        # self.machine_test_votes = [self.machine_test_votes[i] for i in estimated_acc_max_indexs]
+
         return selected_machines_acc, estimated_acc
 
     def _generate_vote(self, gt, acc, vote_prev):
