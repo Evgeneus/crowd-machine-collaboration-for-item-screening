@@ -132,7 +132,7 @@ if __name__ == '__main__':
 
 
             # LOGISTICK REGRESSION
-            logistic_regression = MetaClassifier(LogisticRegression(class_weight={1: 1, 0: 10}))
+            logistic_regression = MetaClassifier(LogisticRegression(class_weight={1: 1, 0: 1}))
             logistic_regression.fit(X_train, Y_train)
 
             # ensemble votes for each filter and item
