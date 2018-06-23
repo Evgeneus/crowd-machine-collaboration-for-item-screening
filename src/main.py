@@ -1,11 +1,11 @@
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.linear_model import LogisticRegression
+from sklearn import grid_search
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import log_loss
 import numpy as np
-import pandas as pd
-
-from src.screening_algorithms.helpers.utils import Generator
-from src.screening_algorithms.helpers.utils import Workers
 from src.screening_algorithms.machine_ensemble import MachineEnsemble
-from src.screening_algorithms.s_run import SRun
-from src.screening_algorithms.stacking_ensemble import StackingEnsemble
+
 
 '''
 z - proportion of cheaters
@@ -24,182 +24,131 @@ iter_num - number of iterations for averaging results
 '''
 
 
+class MetaClassifier(BaseEstimator, ClassifierMixin):
+
+    def __init__(self, clf, weights=None):
+        self.clf = clf
+        self.weights = weights
+        # polynomial features
+        self.poly_degree = 1
+        self.poly = PolynomialFeatures(self.poly_degree, include_bias=False)
+
+    def fit(self, X, y):
+        # parameters for greed search
+        grid_values = {'penalty': ['l1', 'l2'], 'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000]}
+
+        # define classifier
+        self.clf = grid_search.GridSearchCV(self.clf, grid_values, scoring='neg_log_loss')
+        self.clf.fit(X, y)
+
+    def predict(self, labels):
+        X = self._transform_features(labels)
+
+        return self.clf.predict(X)
+
+    def predict_proba(self, X):
+
+        return self.clf.predict_proba(X)
+
+    # create polynom features
+    def _transform_features(self, labels):
+        return self.poly.fit_transform(labels)
+
+
+class NB:
+
+    def __init__(self, filters_num, items_num, estimated_acc):
+        self.filters_num = filters_num
+        self.items_num = items_num
+        self.estimated_acc = estimated_acc
+
+    # output_data: probabilities to be negatives for each filter and item
+    def predict_proba(self, votes_list):
+        probs_list = [None] * self.filters_num * self.items_num
+        for filter_index in range(self.filters_num):
+            filter_machines_acc = self.estimated_acc
+            for item_index in range(self.items_num):
+                like_true_val = 1  # assume true value is positive
+                a, b = 1., 1.  # constituents of bayesian formula, prior is uniform dist.
+                # a responds for positives, b - for negatives
+                for vote, acc in zip(votes_list[item_index * self.filters_num + filter_index], filter_machines_acc):
+                    if vote == like_true_val:
+                        a *= acc
+                        b *= 1 - acc
+                    else:
+                        a *= 1 - acc
+                        b *= acc
+                probs_list[item_index * self.filters_num + filter_index] = [b / (a + b), a / (a + b)]
+        return probs_list
+
+
 if __name__ == '__main__':
-    z = 0.3
     items_num = 1000
-    items_per_worker = 10
-    baseround_items = 20  # must be a multiple of items_per_worker
-    if baseround_items % items_per_worker:
-        raise ValueError('baseround_items must be a multiple of items_per_worker')
     select_conf = 0.95
-    worker_tests = 5
-    votes_per_item = 3
     machine_tests = 500
     machines_num = 10
     machine_acc_range = [0.5, 0.8]
-    lr = 10
-    expert_cost = 20
+    # lr = 10
+    # expert_cost = 20
     filters_num = 4
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
-    filters_dif = [0.9, 1., 1.1, 1.]
+    # filters_dif = [0.9, 1., 1.1, 1.]
     iter_num = 50
     data = []
 
-    params = {
-        'filters_num': filters_num,
-        'items_num': items_num,
-        'baseround_items': baseround_items,
-        'items_per_worker': items_per_worker,
-        'votes_per_item': votes_per_item,
-        'filters_select': filters_select,
-        'filters_dif': filters_dif,
-        'worker_tests': worker_tests,
-        'lr': lr,
-        'expert_cost': expert_cost,
-        'stop_score': 30
-    }
-
-    # S-run algorithm
-    loss_smrun_list = []
-    cost_smrun_list = []
-    rec_sm, pre_sm, f_sm, f_sm = [], [], [], []
-    for _ in range(iter_num):
-        # quiz, generation votes
-        workers_accuracy = Workers(worker_tests, z).simulate_workers()
-        params.update({'workers_accuracy': workers_accuracy,
-                       'ground_truth': None
-                       })
-
-        _, ground_truth = Generator(params).generate_votes_gt(items_num)
-        params.update({'ground_truth': ground_truth})
-
-        # s-run
-        loss_smrun, cost_smrun, rec_sm_, pre_sm_, f_beta_sm = SRun(params).run()
-        loss_smrun_list.append(loss_smrun)
-        cost_smrun_list.append(cost_smrun)
-        rec_sm.append(rec_sm_)
-        pre_sm.append(pre_sm_)
-        f_sm.append(f_beta_sm)
-
-    data.append([worker_tests, worker_tests, lr, np.mean(loss_smrun_list), np.std(loss_smrun_list),
-                 np.mean(cost_smrun_list), np.std(cost_smrun_list), 'Crowd-Ensemble', np.mean(rec_sm),
-                 np.std(rec_sm), np.mean(pre_sm), np.std(pre_sm), np.mean(f_sm), np.std(f_sm),
-                 0., 0., select_conf, baseround_items, items_num, expert_cost, theta, filters_num])
-
-    print('SM-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
-          'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
-          .format(np.mean(loss_smrun_list), np.std(loss_smrun_list), np.mean(rec_sm),
-                  np.std(rec_sm), np.mean(cost_smrun_list), np.std(cost_smrun_list),
-                  np.mean(pre_sm), np.mean(f_sm)))
-
     # Machine and Hybrid algorithms
+    log_loss_stat = {}
     for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
-        print('Theta: {}, filters_num: {}, Corr: {}, test_num: {}, baseround_items: {}, lr: {},'
-              ' select_conf: {}, expert_vote_cost: {}'.
-              format(theta, filters_num, corr, machine_tests, baseround_items, lr, select_conf, expert_cost))
-        loss_me_list = []
-        rec_me, pre_me, f_me, f_me = [], [], [], []
+        print('Corr: {}'.format(corr), 'test_machines_num: {}'.format(machines_num))
 
-        loss_h_list = []
-        cost_h_list = []
-        rec_h, pre_h, f_h, f_h = [], [], [], []
-
-        loss_hs_list = []
-        cost_hs_list = []
-        rec_hs, pre_hs, f_hs, f_hs = [], [], [], []
-
+        nb_loss = []
+        reg_loss = []
         for _ in range(iter_num):
-            # quiz, generation votes
-            workers_accuracy = Workers(worker_tests, z).simulate_workers()
-            params.update({'workers_accuracy': workers_accuracy,
-                           'ground_truth': None
-                           })
+            # generate Y test data
+            Y_test = []
+            for item_index in range(items_num):
+                for filter_select in filters_select:
+                    if np.random.binomial(1, filter_select):
+                        val = 1
+                    else:
+                        val = 0
+                    Y_test.append(val)
 
-            _, ground_truth = Generator(params).generate_votes_gt(items_num)
-            params.update({'ground_truth': ground_truth})
-
-            params.update({
+            params = {
                 'corr': corr,
                 'machine_tests': machine_tests,
                 'machines_num': machines_num,
                 'select_conf': select_conf,
-                'ground_truth': ground_truth,
-                'workers_accuracy': workers_accuracy,
+                'ground_truth': Y_test,
                 'machine_acc_range': machine_acc_range,
-                'stop_score': 15
-            })
+                'filters_select': filters_select,
+                'filters_num': filters_num,
+                'items_num': items_num
+            }
 
-            # machine ensemble
-            loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos, payload_list = MachineEnsemble(params).run()
-            machines_accuracy, estimated_acc, ground_truth_tests, machine_test_votes, votes_list = payload_list
-            loss_me_list.append(loss_me)
-            rec_me.append(rec_me_)
-            pre_me.append(pre_me_)
-            f_me.append(f_beta_me)
+            # generate data
+            machines_accuracy, estimated_acc, Y_train, X_train, X_test = MachineEnsemble(params).run()
 
-            # s-run with machine prior
-            params['prior_prob_pos'] = prior_prob_pos
 
-            loss_h, cost_h, rec_h_, pre_h_, f_beta_h = SRun(params).run()
-            loss_h_list.append(loss_h)
-            cost_h_list.append(cost_h)
-            rec_h.append(rec_h_)
-            pre_h.append(pre_h_)
-            f_h.append(f_beta_h)
+            # LOGISTICK REGRESSION
+            logistic_regression = MetaClassifier(LogisticRegression(class_weight={1: 1, 0: 10}))
+            logistic_regression.fit(X_train, Y_train)
 
-            # s-run with machine prior (stacking)
-            params['machines_accuracy'] = machines_accuracy
-            params['estimated_acc'] = estimated_acc
-            params['ground_truth_tests'] = ground_truth_tests
-            params['machine_test_votes'] = machine_test_votes
-            params['votes_list'] = votes_list
-            params['prior_prob_pos'] = StackingEnsemble(params).run()[4]
+            # ensemble votes for each filter and item
+            predicted_prob_regression = list(logistic_regression.predict_proba(np.array(X_test)))
+            log_loss_regression = log_loss(Y_test, predicted_prob_regression)
+            reg_loss.append(log_loss_regression)
+            # print(log_loss_regression)
 
-            loss_hs, cost_hs, rec_hs_, pre_hs_, f_beta_hs = SRun(params).run()
-            loss_hs_list.append(loss_hs)
-            cost_hs_list.append(cost_hs)
-            rec_hs.append(rec_hs_)
-            pre_hs.append(pre_hs_)
-            f_hs.append(f_beta_hs)
 
-        # print results
-        print('ME-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
-              'precision: {:1.3f}, f_b: {}'
-              .format(np.mean(loss_me_list), np.std(loss_me_list), np.mean(rec_me),
-                      np.std(rec_me), np.mean(pre_me), np.mean(f_me)))
+            # NAIVE BAYESIAN
+            predicted_prob_nb = NB(filters_num, items_num, estimated_acc).predict_proba(X_test)
+            log_loss_nb = log_loss(Y_test, predicted_prob_nb)
+            nb_loss.append(log_loss_nb)
+            # print(log_loss_nb)
 
-        print('H-RUN     loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
-              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
-              .format(np.mean(loss_h_list), np.std(loss_h_list), np.mean(rec_h), np.std(rec_h),
-                      np.mean(cost_h_list), np.std(cost_h_list), np.mean(pre_h), np.mean(f_h)))
+        log_loss_stat[corr] = {'reg': (np.mean(reg_loss), np.std(reg_loss)),
+                               'nb': (np.mean(nb_loss), np.std(nb_loss))}
 
-        print('HS-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
-              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
-              .format(np.mean(loss_hs_list), np.std(loss_hs_list), np.mean(rec_hs), np.std(rec_hs),
-                      np.mean(cost_hs_list), np.std(cost_hs_list), np.mean(pre_hs), np.mean(f_hs)))
-        print('---------------------')
-
-        data.append([worker_tests, worker_tests, lr, np.mean(loss_me_list), np.std(loss_me_list), 0.,
-                     0., 'Machines-Ensemble', np.mean(rec_me), np.std(rec_me),
-                     np.mean(pre_me), np.std(pre_me), np.mean(f_me), np.std(f_me), machine_tests, corr,
-                     select_conf, baseround_items, items_num, expert_cost, theta, filters_num])
-
-        data.append([worker_tests, worker_tests, lr, np.mean(loss_h_list), np.std(loss_h_list),
-                     np.mean(cost_h_list), np.std(cost_h_list), 'Hybrid-Ensemble', np.mean(rec_h),
-                     np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
-                     machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
-                     theta, filters_num])
-
-        data.append([worker_tests, worker_tests, lr, np.mean(loss_hs_list), np.std(loss_hs_list),
-                     np.mean(cost_hs_list), np.std(cost_hs_list), 'Stacking-Ensemble', np.mean(rec_hs),
-                     np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
-                     machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
-                     theta, filters_num])
-
-    pd.DataFrame(data,
-                 columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
-                          'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
-                          'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
-                          'total_items', 'expert_cost', 'theta', 'filters_num']
-                 ).to_csv('../data/output_data/figXXX.csv', index=False)
+    print(log_loss_stat)
