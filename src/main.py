@@ -46,6 +46,48 @@ if __name__ == '__main__':
     iter_num = 50
     data = []
 
+    # NEEDS TO CHECK STAKING, I. E., MACHINE SELECTION !!!!!
+
+    # # ------------------------
+    # # experiment on theta
+    # for theta, x in zip([0.05, 0.1], [0.26, 0.23]):
+    # for theta, x in zip([0.2, 0.4, 0.5], [0.18, 0.11, 0.09]):
+
+    # # ------------------------
+    # # experiment on a filter
+    # filters_select_list = [[0.14, 0.14, 0.14, 0.56],  # High select
+    #                        [0.14, 0.14, 0.14, 0.56],  # High select
+    #                        [0.25, 0.25, 0.25, 0.098],  # Low select
+    #                        [0.25, 0.25, 0.25, 0.098]]  # Low select
+    # filters_dif_list = [[1., 1., 1., 1.2],  # High accurate
+    #                     [1., 1., 1., 0.7],  # Low accurate
+    #                     [1., 1., 1., 1.2],  # High accurate
+    #                     [1., 1., 1., 0.7]]  # Low accurate
+    # labels = ['High Select/High Acc', 'High Select/Low Acc', 'Low Select/High Acc', 'Low Select/Low Acc']
+    # for filters_select, filters_dif, label in zip(filters_select_list, filters_dif_list, labels):
+    #     print(label)
+
+    # # --------------------
+    # # experiment: number of filters
+    # filters_select_list = [[0.14, 0.14, 0.14, 0.56],
+    #                        [0.15, 0.15, 0.56],
+    #                        [0.16, 0.16*4],
+    #                        [0.3]]
+    # filters_dif_list = [[1.]*4,
+    #                    [1.]*3,
+    #                    [1.]*2
+    #                    [1]]
+    # filters_num_list = [4, 3, 2, 1]
+    # for filters_select, filters_dif, filters_num in zip(filters_select_list, filters_dif_list, labels):
+
+    # # ------------------------
+    # for theta in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]:
+    # for filters_num in [1, 2, 3, 4, 5]:
+    #     pow = 1 - theta**(1/filters_num)
+    #     filters_select = [pow]*filters_num
+    #     filters_dif = [1.]*filters_num
+    # for expert_cost in [10, 20, 30, 40, 50, 70, 100]:
+
     params = {
         'filters_num': filters_num,
         'items_num': items_num,
@@ -94,6 +136,8 @@ if __name__ == '__main__':
                   np.mean(pre_sm), np.mean(f_sm)))
 
     # Machine and Hybrid algorithms
+    # for machine_tests in [15, 20, 30, 40, 50, 100, 150, 200, 500]:
+    # for select_conf in [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.99]:
     for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
         print('Theta: {}, filters_num: {}, Corr: {}, test_num: {}, baseround_items: {}, lr: {},'
               ' select_conf: {}, expert_vote_cost: {}'.
@@ -202,4 +246,4 @@ if __name__ == '__main__':
                           'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
                           'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
                           'total_items', 'expert_cost', 'theta', 'filters_num', 'machine_acc_range']
-                 ).to_csv('../data/output_data/new/figXXX.csv', index=False)
+                 ).to_csv('../data/output_data/figXXX.csv', index=False)
