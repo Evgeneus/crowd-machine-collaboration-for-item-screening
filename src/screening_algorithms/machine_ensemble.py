@@ -111,9 +111,10 @@ class MachineEnsemble(Metrics):
         # check number of machines passed tests
         # add at least one machine passed tests (accuracy in self.machine_acc_range)
         if len(selected_machines_acc) < 1:
-            m_acc = np.random.uniform(self.machine_acc_range[0], self.machine_acc_range[1])
-            selected_machines_acc.append(m_acc)
-            estimated_acc.append(m_acc)
+            raise Exception("No machines selected, i.e., zero machines passed tests => need more accurate classifiers")
+            # m_acc = np.random.uniform(self.machine_acc_range[0], self.machine_acc_range[1])
+            # selected_machines_acc.append(m_acc)
+            # estimated_acc.append(m_acc)
 
         return selected_machines_acc, estimated_acc
 

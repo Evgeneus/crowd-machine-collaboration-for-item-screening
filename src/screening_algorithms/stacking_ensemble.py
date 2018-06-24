@@ -67,7 +67,7 @@ class StackingEnsemble(MachineEnsemble):
 
     def run(self):
         # create stacking classifier
-        meta_clf = MetaClassifier(LogisticRegression(class_weight={1: 1, 0: 10}))
+        meta_clf = MetaClassifier(LogisticRegression(class_weight={1: 1, 0: 1}))
         meta_clf.fit(self.machine_test_votes, self.ground_truth_tests)
 
         # ensemble votes for each filter and item
