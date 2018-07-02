@@ -84,7 +84,7 @@ if __name__ == '__main__':
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
     filters_dif = [0.9, 1., 1.1, 1.]
-    iter_num = 5
+    iter_num = 50
     data = []
 
     params = {
@@ -153,6 +153,8 @@ if __name__ == '__main__':
 
         loss_b_list, rec_b_list, pre_b_list, acc_b_clf = [], [], [], []
 
+        delta_loss, delta_pre, delta_rec = [], [], []
+
         for _ in range(iter_num):
             # quiz, generation votes
             workers_accuracy = Workers(worker_tests, z).simulate_workers()
@@ -216,6 +218,10 @@ if __name__ == '__main__':
             pre_hs.append(pre_hs_)
             # f_hs.append(f_beta_hs)
 
+            delta_loss.append(loss_hs - loss_me)
+            delta_pre.append(rec_hs_ - rec_me_)
+            delta_rec.append(pre_hs_ - pre_me_)
+
         # print results
         print('NB        loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
               'precision: {:1.3f}, precision_std: {}'
@@ -230,6 +236,11 @@ if __name__ == '__main__':
               'precision: {:1.3f}, precision_std: {}, acc_of_clf: {:1.3f}'
               .format(np.mean(loss_b_list), np.std(loss_b_list), np.mean(rec_b_list), np.std(rec_b_list),
                       np.mean(pre_b_list), np.std(pre_b_list), np.mean(acc_b_clf)))
+
+        print('delta(REG-NB)   loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+                'precision: {:1.3f}, precision_std: {}'.format(np.mean(delta_loss), np.std(delta_loss),
+                                                               np.mean(delta_rec), np.std(delta_rec),
+                      np.mean(delta_pre), np.std(delta_pre)))
 
         # print('HS-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
         #       'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
