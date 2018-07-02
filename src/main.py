@@ -84,7 +84,7 @@ if __name__ == '__main__':
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
     filters_dif = [0.9, 1., 1.1, 1.]
-    iter_num = 50
+    iter_num = 5
     data = []
 
     params = {
@@ -151,7 +151,7 @@ if __name__ == '__main__':
         cost_hs_list = []
         rec_hs, pre_hs, f_hs, f_hs = [], [], [], []
 
-        loss_b_list, rec_b_list, pre_b_list = [], [], []
+        loss_b_list, rec_b_list, pre_b_list, acc_b_clf = [], [], [], []
 
         for _ in range(iter_num):
             # quiz, generation votes
@@ -188,6 +188,7 @@ if __name__ == '__main__':
             loss_b_list.append(b_loss)
             pre_b_list.append(b_pre)
             rec_b_list.append(b_rec)
+            acc_b_clf.append(estimated_acc[0])
 
 
             # # s-run with machine prior
@@ -226,9 +227,9 @@ if __name__ == '__main__':
               .format(np.mean(loss_hs_list), np.std(loss_hs_list), np.mean(rec_hs), np.std(rec_hs),
                       np.mean(pre_hs), np.std(pre_hs)))
         print('BestM     loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
-              'precision: {:1.3f}, precision_std: {}'
+              'precision: {:1.3f}, precision_std: {}, acc_of_clf: {:1.3f}'
               .format(np.mean(loss_b_list), np.std(loss_b_list), np.mean(rec_b_list), np.std(rec_b_list),
-                      np.mean(pre_b_list), np.std(pre_b_list)))
+                      np.mean(pre_b_list), np.std(pre_b_list), np.mean(acc_b_clf)))
 
         # print('HS-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
         #       'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
