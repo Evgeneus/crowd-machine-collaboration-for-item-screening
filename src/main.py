@@ -115,6 +115,7 @@ if __name__ == '__main__':
 
         nb_loss, nb_rec, nb_pre = [], [], []
         reg_loss, reg_rec, reg_pre = [], [], []
+        b_pre, b_rec = [], []
         for _ in range(iter_num):
             # generate Y test data
             Y_test = []
@@ -167,15 +168,21 @@ if __name__ == '__main__':
             nb_pre.append(nb_pre_)
 
 
-        # log_loss_stat[corr] = {'reg': (np.mean(reg_loss), np.std(reg_loss)),
-        #                        'nb': (np.mean(nb_loss), np.std(nb_loss))}
+            # BEST MACHINE
+            b_predicted = [i[0] for i in X_test]
+            b_pre_, b_rec_, _, _ = precision_recall_fscore_support(Y_test, b_predicted, average='binary')
+            b_pre.append(b_pre_)
+            b_rec.append(b_rec_)
 
-        print('REG    log_loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
-              'pre {:1.3f}, pre_std {:1.3f}'
-              .format(np.mean(reg_loss), np.std(reg_loss), np.mean(reg_rec),
-                      np.std(reg_rec), np.mean(reg_rec), np.mean(reg_rec)))
-        print('NB     log_loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
-              'pre {:1.3f}, pre_std {:1.3f}'
+        print('NB     log_loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.3f}, rec_std: {:1.3f}, '
+              'precision: {:1.3f}, pre_std {:1.3f}'
               .format(np.mean(nb_loss), np.std(nb_loss), np.mean(nb_rec),
                       np.std(nb_rec), np.mean(nb_rec), np.mean(nb_rec)))
+        print('REG    log_loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.3f}, rec_std: {:1.3f}, '
+              'precision: {:1.3f}, pre_std {:1.3f}'
+              .format(np.mean(reg_loss), np.std(reg_loss), np.mean(reg_rec),
+                      np.std(reg_rec), np.mean(reg_rec), np.mean(reg_rec)))
+        print('BestM    recall: {:1.3f}, rec_std: {:1.3f}, '
+              'precision: {:1.3f}, pre_std {:1.3f}'
+              .format(np.mean(b_rec), np.std(b_rec), np.mean(b_rec), np.mean(b_rec)))
         print('---------------------')
