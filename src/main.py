@@ -34,7 +34,7 @@ if __name__ == '__main__':
     select_conf = 0.95
     worker_tests = 5
     votes_per_item = 3
-    machine_tests = 100
+    machine_tests = 500
     machines_num = 10
     machine_acc_range = [0.5, 0.8]
     lr = 10
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
     filters_dif = [0.9, 1., 1.1, 1.]
-    iter_num = 5
+    iter_num = 500
     data = []
 
     # NEEDS TO CHECK STAKING, I. E., MACHINE SELECTION !!!!!
@@ -149,15 +149,16 @@ if __name__ == '__main__':
         #       ' select_conf: {}, expert_vote_cost: {}'.
         #       format(theta, filters_num, corr, machine_tests, baseround_items, lr, select_conf, expert_cost))
         loss_me_list = []
-        rec_me, pre_me, f_me, f_me = [], [], [], []
+        rec_me, pre_me, f_me = [], [], []
 
-        loss_h_list = []
-        cost_h_list = []
-        rec_h, pre_h, f_h, f_h = [], [], [], []
+        loss_h_list, cost_h_list = [], []
+        rec_h, pre_h, f_h = [], [], []
 
-        loss_hs_list = []
-        cost_hs_list = []
-        rec_hs, pre_hs, f_hs, f_hs = [], [], [], []
+        loss_hs_list, cost_hs_list = [], []
+        rec_hs, pre_hs, f_hs = [], [], []
+
+        loss_b, cost_b = [], []
+        rec_b, pre_b, f_b = [], [], []
 
         for _ in range(iter_num):
             # quiz, generation votes
@@ -188,7 +189,7 @@ if __name__ == '__main__':
             pre_me.append(pre_me_)
             f_me.append(f_beta_me)
 
-            # s-run with machine prior
+            # s-run with machine prior (NBayes)
             params['prior_prob_pos'] = prior_prob_pos
 
             loss_h, cost_h, rec_h_, pre_h_, f_beta_h = SRun(params).run()
@@ -198,7 +199,7 @@ if __name__ == '__main__':
             pre_h.append(pre_h_)
             f_h.append(f_beta_h)
 
-            # s-run with machine prior (stacking)
+            # s-run with machine prior (Regression)
             params['machines_accuracy'] = machines_accuracy
             params['estimated_acc'] = estimated_acc
             params['ground_truth_tests'] = ground_truth_tests
@@ -212,6 +213,20 @@ if __name__ == '__main__':
             rec_hs.append(rec_hs_)
             pre_hs.append(pre_hs_)
             f_hs.append(f_beta_hs)
+
+            # s-run with machine prior (Best Machine)
+            m_votes = [i[0] for i in votes_list]
+            b_probs = []
+            b_machine_acc = estimated_acc[0]
+            for i in m_votes:
+                b_probs.append(b_machine_acc if i == 0 else 1 - b_machine_acc)
+            params['prior_prob_pos'] = b_probs
+            loss_b_, cost_b_, rec_b_, pre_b_, f_b_ = SRun(params).run()
+            loss_b.append(loss_b_)
+            cost_b.append(cost_b_)
+            rec_b.append(rec_b_)
+            pre_b.append(pre_b_)
+            f_b.append(f_b_)
 
         # print results
         print('ME-RUN   loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
@@ -228,6 +243,11 @@ if __name__ == '__main__':
               'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, pre_std: {:1.3f}'
               .format(np.mean(loss_hs_list), np.std(loss_hs_list), np.mean(rec_hs), np.std(rec_hs),
                       np.mean(cost_hs_list), np.std(cost_hs_list), np.mean(pre_hs), np.std(pre_hs)))
+        print('BestM+C  loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, pre_std: {:1.3f}'
+              .format(np.mean(loss_b), np.std(loss_b), np.mean(rec_b), np.std(rec_b),
+                      np.mean(cost_b), np.std(cost_b), np.mean(pre_b), np.std(pre_b)))
+
         print('---------------------')
 
         data.append([worker_tests, worker_tests, lr, np.mean(loss_me_list), np.std(loss_me_list), 0.,
@@ -244,6 +264,12 @@ if __name__ == '__main__':
         data.append([worker_tests, worker_tests, lr, np.mean(loss_hs_list), np.std(loss_hs_list),
                      np.mean(cost_hs_list), np.std(cost_hs_list), 'Hybrid-Ensemble (Regression)', np.mean(rec_hs),
                      np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
+                     machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
+                     theta, filters_num, machine_acc_range])
+
+        data.append([worker_tests, worker_tests, lr, np.mean(loss_b), np.std(loss_b),
+                     np.mean(cost_b), np.std(cost_b), 'Hybrid-Ensemble (1 best machine)', np.mean(rec_b),
+                     np.std(rec_b), np.mean(pre_b), np.std(pre_b), np.mean(f_b), np.std(f_b),
                      machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
                      theta, filters_num, machine_acc_range])
 
