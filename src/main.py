@@ -219,8 +219,8 @@ if __name__ == '__main__':
             # f_hs.append(f_beta_hs)
 
         delta_loss = np.array(loss_hs_list) - np.array(loss_me_list)
-        delta_pre = np.array(rec_hs) - np.array(rec_me)
-        delta_rec = np.array(pre_hs) - np.array(pre_me)
+        delta_rec = np.array(rec_hs) - np.array(rec_me)
+        delta_pre = np.array(pre_hs) - np.array(pre_me)
 
         # print results
         print('NB        loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
