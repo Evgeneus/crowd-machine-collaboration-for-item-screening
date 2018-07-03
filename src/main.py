@@ -2,7 +2,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.linear_model import LogisticRegression
 from sklearn import grid_search
 from sklearn.preprocessing import PolynomialFeatures
-from sklearn.metrics import log_loss
+from sklearn.metrics import log_loss, precision_recall_fscore_support
 import numpy as np
 from src.screening_algorithms.machine_ensemble import MachineEnsemble
 
@@ -81,6 +81,16 @@ class NB:
                 probs_list[item_index * self.filters_num + filter_index] = [b / (a + b), a / (a + b)]
         return probs_list
 
+    def predict(self, prob):
+        thr = 0.5
+        predicted = []
+        for i in prob:
+            if i[1] > thr:
+                predicted.append(1)
+            else:
+                predicted.append(0)
+        return predicted
+
 
 if __name__ == '__main__':
     items_num = 1000
@@ -90,9 +100,10 @@ if __name__ == '__main__':
     machine_acc_range = [0.5, 0.8]
     # lr = 10
     # expert_cost = 20
-    filters_num = 4
+    filters_num = 1
     theta = 0.3
-    filters_select = [0.14, 0.14, 0.28, 0.42]
+    filters_select = [0.3]
+    # filters_select = [0.14, 0.14, 0.28, 0.42]
     # filters_dif = [0.9, 1., 1.1, 1.]
     iter_num = 50
     data = []
@@ -100,10 +111,10 @@ if __name__ == '__main__':
     # Machine and Hybrid algorithms
     log_loss_stat = {}
     for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
-        print('Corr: {}'.format(corr), 'test_machines_num: {}'.format(machines_num))
+        print('Corr: {}'.format(corr))
 
-        nb_loss = []
-        reg_loss = []
+        nb_loss, nb_rec, nb_pre = [], [], []
+        reg_loss, reg_rec, reg_pre = [], [], []
         for _ in range(iter_num):
             # generate Y test data
             Y_test = []
@@ -137,18 +148,34 @@ if __name__ == '__main__':
 
             # ensemble votes for each filter and item
             predicted_prob_regression = list(logistic_regression.predict_proba(np.array(X_test)))
+            predicted_regression = logistic_regression.predict(np.array(X_test))
             log_loss_regression = log_loss(Y_test, predicted_prob_regression)
+            reg_pre_, reg_rec_, _, _ = precision_recall_fscore_support(Y_test, predicted_regression, average='binary')
             reg_loss.append(log_loss_regression)
-            # print(log_loss_regression)
+            reg_pre.append(reg_pre_)
+            reg_rec.append(reg_rec_)
 
 
             # NAIVE BAYESIAN
-            predicted_prob_nb = NB(filters_num, items_num, estimated_acc).predict_proba(X_test)
+            nb = NB(filters_num, items_num, estimated_acc)
+            predicted_prob_nb = nb.predict_proba(X_test)
+            predicted_nb = nb.predict(predicted_prob_nb)
+            nb_pre_, nb_rec_, _, _ = precision_recall_fscore_support(Y_test, predicted_nb, average='binary')
             log_loss_nb = log_loss(Y_test, predicted_prob_nb)
             nb_loss.append(log_loss_nb)
-            # print(log_loss_nb)
+            nb_rec.append(nb_rec_)
+            nb_pre.append(nb_pre_)
 
-        log_loss_stat[corr] = {'reg': (np.mean(reg_loss), np.std(reg_loss)),
-                               'nb': (np.mean(nb_loss), np.std(nb_loss))}
 
-    print(log_loss_stat)
+        # log_loss_stat[corr] = {'reg': (np.mean(reg_loss), np.std(reg_loss)),
+        #                        'nb': (np.mean(nb_loss), np.std(nb_loss))}
+
+        print('REG    log_loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
+              'pre {:1.3f}, pre_std {:1.3f}'
+              .format(np.mean(reg_loss), np.std(reg_loss), np.mean(reg_rec),
+                      np.std(reg_rec), np.mean(reg_rec), np.mean(reg_rec)))
+        print('NB     log_loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
+              'pre {:1.3f}, pre_std {:1.3f}'
+              .format(np.mean(nb_loss), np.std(nb_loss), np.mean(nb_rec),
+                      np.std(nb_rec), np.mean(nb_rec), np.mean(nb_rec)))
+        print('---------------------')
