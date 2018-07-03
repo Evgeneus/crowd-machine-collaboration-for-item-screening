@@ -34,7 +34,7 @@ if __name__ == '__main__':
     select_conf = 0.95
     worker_tests = 5
     votes_per_item = 3
-    machine_tests = 20
+    machine_tests = 100
     machines_num = 10
     machine_acc_range = [0.5, 0.8]
     lr = 10
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
     filters_dif = [0.9, 1., 1.1, 1.]
-    iter_num = 50
+    iter_num = 5
     data = []
 
     # NEEDS TO CHECK STAKING, I. E., MACHINE SELECTION !!!!!
@@ -129,19 +129,25 @@ if __name__ == '__main__':
                  np.std(rec_sm), np.mean(pre_sm), np.std(pre_sm), np.mean(f_sm), np.std(f_sm),
                  0., 0., select_conf, baseround_items, items_num, expert_cost, theta, filters_num, None])
 
-    print('SM-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
-          'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
+    print('CROWD    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
+          'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, pre_std: {:1.3f}'
           .format(np.mean(loss_smrun_list), np.std(loss_smrun_list), np.mean(rec_sm),
                   np.std(rec_sm), np.mean(cost_smrun_list), np.std(cost_smrun_list),
-                  np.mean(pre_sm), np.mean(f_sm)))
+                  np.mean(pre_sm), np.std(pre_sm)))
+
+    print('---------------------')
+    print('Theta: {}, filters_num: {}, test_num: {}, baseround_items: {}, lr: {},'
+          ' select_conf: {}, expert_vote_cost: {}'.
+          format(theta, filters_num, machine_tests, baseround_items, lr, select_conf, expert_cost))
 
     # Machine and Hybrid algorithms
     # for machine_tests in [15, 20, 30, 40, 50, 100, 150, 200, 500]:
     # for select_conf in [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.99]:
     for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
-        print('Theta: {}, filters_num: {}, Corr: {}, test_num: {}, baseround_items: {}, lr: {},'
-              ' select_conf: {}, expert_vote_cost: {}'.
-              format(theta, filters_num, corr, machine_tests, baseround_items, lr, select_conf, expert_cost))
+        print('corr: {}'.format(corr))
+        # print('Theta: {}, filters_num: {}, Corr: {}, test_num: {}, baseround_items: {}, lr: {},'
+        #       ' select_conf: {}, expert_vote_cost: {}'.
+        #       format(theta, filters_num, corr, machine_tests, baseround_items, lr, select_conf, expert_cost))
         loss_me_list = []
         rec_me, pre_me, f_me, f_me = [], [], [], []
 
@@ -208,20 +214,20 @@ if __name__ == '__main__':
             f_hs.append(f_beta_hs)
 
         # print results
-        print('ME-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
-              'precision: {:1.3f}, f_b: {}'
+        print('ME-RUN   loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
+              'precision: {:1.3f}'
               .format(np.mean(loss_me_list), np.std(loss_me_list), np.mean(rec_me),
-                      np.std(rec_me), np.mean(pre_me), np.mean(f_me)))
+                      np.std(rec_me), np.mean(pre_me)))
 
-        print('H-RUN     loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
-              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
+        print('NB+C     loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, pre_std: {:1.3f}'
               .format(np.mean(loss_h_list), np.std(loss_h_list), np.mean(rec_h), np.std(rec_h),
-                      np.mean(cost_h_list), np.std(cost_h_list), np.mean(pre_h), np.mean(f_h)))
+                      np.mean(cost_h_list), np.std(cost_h_list), np.mean(pre_h), np.std(pre_h)))
 
-        print('HS-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
-              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
+        print('REG+C    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, pre_std: {:1.3f}'
               .format(np.mean(loss_hs_list), np.std(loss_hs_list), np.mean(rec_hs), np.std(rec_hs),
-                      np.mean(cost_hs_list), np.std(cost_hs_list), np.mean(pre_hs), np.mean(f_hs)))
+                      np.mean(cost_hs_list), np.std(cost_hs_list), np.mean(pre_hs), np.std(pre_hs)))
         print('---------------------')
 
         data.append([worker_tests, worker_tests, lr, np.mean(loss_me_list), np.std(loss_me_list), 0.,
