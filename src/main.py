@@ -75,7 +75,7 @@ if __name__ == '__main__':
     select_conf = 0.95
     worker_tests = 5
     votes_per_item = 3
-    machine_tests = 20
+    machine_tests = 100
     machines_num = 10
     machine_acc_range = [0.5, 0.8]
     lr = 10
@@ -218,9 +218,9 @@ if __name__ == '__main__':
             pre_hs.append(pre_hs_)
             # f_hs.append(f_beta_hs)
 
-            delta_loss.append(loss_hs - loss_me)
-            delta_pre.append(rec_hs_ - rec_me_)
-            delta_rec.append(pre_hs_ - pre_me_)
+        delta_loss = np.array(loss_hs_list) - np.array(loss_me_list)
+        delta_pre = np.array(rec_hs) - np.array(rec_me)
+        delta_rec = np.array(pre_hs) - np.array(pre_me)
 
         # print results
         print('NB        loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
