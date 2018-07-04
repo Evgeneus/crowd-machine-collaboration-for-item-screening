@@ -34,9 +34,9 @@ if __name__ == '__main__':
     select_conf = 0.95
     worker_tests = 5
     votes_per_item = 3
-    machine_tests = 20
+    machine_tests = 500
     machines_num = 10
-    machine_acc_range = [0.5, 0.8]
+    machine_acc_range = [0.5, 0.95]
     lr = 10
     expert_cost = 20
     filters_num = 4
@@ -101,12 +101,10 @@ if __name__ == '__main__':
         loss_me_list = []
         rec_me, pre_me, f_me, f_me = [], [], [], []
 
-        loss_h_list = []
-        cost_h_list = []
+        loss_h_list, cost_h_list = [], []
         rec_h, pre_h, f_h, f_h = [], [], [], []
 
-        loss_hs_list = []
-        cost_hs_list = []
+        loss_hs_list, cost_hs_list = [], []
         rec_hs, pre_hs, f_hs, f_hs = [], [], [], []
 
         for _ in range(iter_num):
@@ -165,17 +163,17 @@ if __name__ == '__main__':
 
         # print results
         print('ME-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
-              'precision: {:1.3f}, f_b: {}'
+              'precision: {:1.3f}, f_b: {:1.3f}'
               .format(np.mean(loss_me_list), np.std(loss_me_list), np.mean(rec_me),
                       np.std(rec_me), np.mean(pre_me), np.mean(f_me)))
 
         print('H-RUN     loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
-              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
+              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {:1.3f}'
               .format(np.mean(loss_h_list), np.std(loss_h_list), np.mean(rec_h), np.std(rec_h),
                       np.mean(cost_h_list), np.std(cost_h_list), np.mean(pre_h), np.mean(f_h)))
 
         print('HS-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
-              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
+              'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {:1.3f}'
               .format(np.mean(loss_hs_list), np.std(loss_hs_list), np.mean(rec_hs), np.std(rec_hs),
                       np.mean(cost_hs_list), np.std(cost_hs_list), np.mean(pre_hs), np.mean(f_hs)))
         print('---------------------')
@@ -186,7 +184,7 @@ if __name__ == '__main__':
                      select_conf, baseround_items, items_num, expert_cost, theta, filters_num, machine_acc_range])
 
         data.append([worker_tests, worker_tests, lr, np.mean(loss_h_list), np.std(loss_h_list),
-                     np.mean(cost_h_list), np.std(cost_h_list), 'Hybrid-Ensemble', np.mean(rec_h),
+                     np.mean(cost_h_list), np.std(cost_h_list), 'Hybrid-Ensemble (NBayes)', np.mean(rec_h),
                      np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
                      machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
                      theta, filters_num, machine_acc_range])
@@ -196,6 +194,36 @@ if __name__ == '__main__':
                      np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
                      machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
                      theta, filters_num, machine_acc_range])
+
+    loss_b, cost_b = [], []
+    rec_b, pre_b, f_b = [], [], []
+    for _ in range(iter_num):
+        # s-run with machine prior (Best Machine)
+        m_votes = [i[0] for i in votes_list]
+        b_probs = []
+        b_machine_acc = estimated_acc[0]
+        for i in m_votes:
+            b_probs.append(b_machine_acc if i == 0 else 1 - b_machine_acc)
+        params['prior_prob_pos'] = b_probs
+        loss_b_, cost_b_, rec_b_, pre_b_, f_b_ = SRun(params).run()
+        loss_b.append(loss_b_)
+        cost_b.append(cost_b_)
+        rec_b.append(rec_b_)
+        pre_b.append(pre_b_)
+        f_b.append(f_b_)
+
+    data.append([worker_tests, worker_tests, lr, np.mean(loss_b), np.std(loss_b),
+                 np.mean(cost_b), np.std(cost_b), 'Hybrid-Ensemble (1 best machine)', np.mean(rec_b),
+                 np.std(rec_b), np.mean(pre_b), np.std(pre_b), np.mean(f_b), np.std(f_b),
+                 machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
+                 theta, filters_num, machine_acc_range])
+
+    print('BestM+C   loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+          'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {:1.3f}'
+          .format(np.mean(loss_b), np.std(loss_b), np.mean(rec_b), np.std(rec_b),
+                  np.mean(cost_b), np.std(cost_b), np.mean(pre_b), np.mean(f_b)))
+    print('---------------------')
+
 
     pd.DataFrame(data,
                  columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
