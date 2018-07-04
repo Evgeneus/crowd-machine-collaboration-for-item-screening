@@ -57,6 +57,7 @@ class StackingEnsemble(MachineEnsemble):
         self.ground_truth_tests = params['ground_truth_tests']
         self.machine_test_votes = params['machine_test_votes']
         self.votes_list = params['votes_list']
+        self.expert_cost = params['expert_cost']
 
         # metrics to be computed
         self.loss = None
@@ -79,5 +80,6 @@ class StackingEnsemble(MachineEnsemble):
         self.recall = metrics[1]
         self.precision = metrics[2]
         self.f_beta = metrics[3]
+        self.cost = metrics[4] * self.expert_cost / self.items_num
 
-        return self.loss, self.recall, self.precision, self.f_beta, ensembled_votes
+        return self.loss, self.recall, self.precision, self.cost, ensembled_votes

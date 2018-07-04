@@ -35,6 +35,7 @@ class BestMachine(Metrics):
         self.items_num = params['items_num']
         self.ground_truth = params['ground_truth']
         self.lr = params['lr']
+        self.expert_cost = params['expert_cost']
 
     def _classify_items(self, ensembled_votes):
         items_labels = []
@@ -61,8 +62,9 @@ class BestMachine(Metrics):
         self.loss = metrics[0]
         self.recall = metrics[1]
         self.precision = metrics[2]
+        self.cost = metrics[4] * self.expert_cost / self.items_num
 
-        return self.loss, self.recall, self.precision
+        return self.loss, self.recall, self.precision, self.cost
 
 
 if __name__ == '__main__':
@@ -84,7 +86,7 @@ if __name__ == '__main__':
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
     filters_dif = [0.9, 1., 1.1, 1.]
-    iter_num = 50
+    iter_num = 5
     data = []
 
     params = {
@@ -114,25 +116,25 @@ if __name__ == '__main__':
 
         _, ground_truth = Generator(params).generate_votes_gt(items_num)
         params.update({'ground_truth': ground_truth})
-    #
-    #     # s-run
-    #     loss_smrun, cost_smrun, rec_sm_, pre_sm_, f_beta_sm = SRun(params).run()
-    #     loss_smrun_list.append(loss_smrun)
-    #     cost_smrun_list.append(cost_smrun)
-    #     rec_sm.append(rec_sm_)
-    #     pre_sm.append(pre_sm_)
-    #     f_sm.append(f_beta_sm)
-    #
-    # data.append([worker_tests, worker_tests, lr, np.mean(loss_smrun_list), np.std(loss_smrun_list),
-    #              np.mean(cost_smrun_list), np.std(cost_smrun_list), 'Crowd-Ensemble', np.mean(rec_sm),
-    #              np.std(rec_sm), np.mean(pre_sm), np.std(pre_sm), np.mean(f_sm), np.std(f_sm),
-    #              0., 0., select_conf, baseround_items, items_num, expert_cost, theta, filters_num, None])
-    #
-    # print('SM-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
-    #       'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
-    #       .format(np.mean(loss_smrun_list), np.std(loss_smrun_list), np.mean(rec_sm),
-    #               np.std(rec_sm), np.mean(cost_smrun_list), np.std(cost_smrun_list),
-    #               np.mean(pre_sm), np.mean(f_sm)))
+
+        # s-run
+        loss_smrun, cost_smrun, rec_sm_, pre_sm_, f_beta_sm = SRun(params).run()
+        loss_smrun_list.append(loss_smrun)
+        cost_smrun_list.append(cost_smrun)
+        rec_sm.append(rec_sm_)
+        pre_sm.append(pre_sm_)
+        f_sm.append(f_beta_sm)
+
+    data.append([worker_tests, worker_tests, lr, np.mean(loss_smrun_list), np.std(loss_smrun_list),
+                 np.mean(cost_smrun_list), np.std(cost_smrun_list), 'Crowd-Ensemble', np.mean(rec_sm),
+                 np.std(rec_sm), np.mean(pre_sm), np.std(pre_sm), np.mean(f_sm), np.std(f_sm),
+                 0., 0., select_conf, baseround_items, items_num, expert_cost, theta, filters_num, None])
+
+    print('SM-RUN    loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
+          'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
+          .format(np.mean(loss_smrun_list), np.std(loss_smrun_list), np.mean(rec_sm),
+                  np.std(rec_sm), np.mean(cost_smrun_list), np.std(cost_smrun_list),
+                  np.mean(pre_sm), np.mean(f_sm)))
     print('Theta: {}, filters_num: {}, test_num: {}, baseround_items: {}, lr: {},'
           ' select_conf: {}, expert_vote_cost: {}'.
           format(theta, filters_num, machine_tests, baseround_items, lr, select_conf, expert_cost))
@@ -141,7 +143,7 @@ if __name__ == '__main__':
     for corr in [0., 0.2, 0.3, 0.5, 0.7, 0.9]:
         print('Corr: {}'.format(corr))
         loss_me_list = []
-        rec_me, pre_me, f_me, f_me = [], [], [], []
+        rec_me, pre_me, f_me, f_me, cost_me = [], [], [], [], []
 
         loss_h_list = []
         cost_h_list = []
@@ -151,7 +153,7 @@ if __name__ == '__main__':
         cost_hs_list = []
         rec_hs, pre_hs, f_hs, f_hs = [], [], [], []
 
-        loss_b_list, rec_b_list, pre_b_list, acc_b_clf = [], [], [], []
+        loss_b_list, rec_b_list, pre_b_list, acc_b_clf, cost_b = [], [], [], [], []
 
         delta_loss, delta_pre, delta_rec = [], [], []
 
@@ -177,31 +179,22 @@ if __name__ == '__main__':
             })
 
             # machine ensemble
-            loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos, payload_list = MachineEnsemble(params).run()
+            loss_me, rec_me_, pre_me_, f_beta_me, prior_prob_pos, cost_me_, payload_list = MachineEnsemble(params).run()
             machines_accuracy, estimated_acc, ground_truth_tests, machine_test_votes, votes_list = payload_list
             loss_me_list.append(loss_me)
             rec_me.append(rec_me_)
             pre_me.append(pre_me_)
             f_me.append(f_beta_me)
+            cost_me.append(cost_me_)
 
             # best_machine
-            b_loss, b_rec, b_pre = BestMachine(estimated_acc[0], [i[0] for i in votes_list], params).\
+            b_loss, b_rec, b_pre, b_cost_ = BestMachine(estimated_acc[0], [i[0] for i in votes_list], params).\
                 get_metrics()
             loss_b_list.append(b_loss)
             pre_b_list.append(b_pre)
             rec_b_list.append(b_rec)
+            cost_b.append(b_cost_)
             acc_b_clf.append(estimated_acc[0])
-
-
-            # # s-run with machine prior
-            # params['prior_prob_pos'] = prior_prob_pos
-            #
-            # loss_h, cost_h, rec_h_, pre_h_, f_beta_h = SRun(params).run()
-            # loss_h_list.append(loss_h)
-            # cost_h_list.append(cost_h)
-            # rec_h.append(rec_h_)
-            # pre_h.append(pre_h_)
-            # f_h.append(f_beta_h)
 
             # s-run with machine prior (stacking)
             params['machines_accuracy'] = machines_accuracy
@@ -211,9 +204,9 @@ if __name__ == '__main__':
             params['votes_list'] = votes_list
             # params['prior_prob_pos'] = StackingEnsemble(params).run()[4]
 
-            loss_hs, rec_hs_, pre_hs_, _, _ = StackingEnsemble(params).run()
+            loss_hs, rec_hs_, pre_hs_, cost_hs_, _ = StackingEnsemble(params).run()
             loss_hs_list.append(loss_hs)
-            # cost_hs_list.append(cost_hs)
+            cost_hs_list.append(cost_hs_)
             rec_hs.append(rec_hs_)
             pre_hs.append(pre_hs_)
             # f_hs.append(f_beta_hs)
@@ -224,20 +217,20 @@ if __name__ == '__main__':
 
         # print results
         print('NB        loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
-              'precision: {:1.3f}, precision_std: {}'
+              'cost: {:1.3f}, cost_std: {:1.3f}, precision: {:1.3f}, precision_std: {}'
               .format(np.mean(loss_me_list), np.std(loss_me_list), np.mean(rec_me),
-                      np.std(rec_me), np.mean(pre_me), np.std(pre_me)))
+                      np.std(rec_me), np.mean(cost_me), np.std(cost_me), np.mean(pre_me), np.std(pre_me)))
 
-        print('Reg       loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
-                'precision: {:1.3f}, precision_std: {}'
+        print('Reg       loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
+                'cost: {:1.3f}, cost_std: {:1.3f}, precision: {:1.3f}, precision_std: {}'
               .format(np.mean(loss_hs_list), np.std(loss_hs_list), np.mean(rec_hs), np.std(rec_hs),
-                      np.mean(pre_hs), np.std(pre_hs)))
-        print('BestM     loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
-              'precision: {:1.3f}, precision_std: {}, acc_of_clf: {:1.3f}'
+                      np.mean(cost_hs_list), np.std(cost_hs_list), np.mean(pre_hs), np.std(pre_hs)))
+        print('BestM     loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
+              'cost: {:1.3f}, cost_std: {:1.3f}, precision: {:1.3f}, precision_std: {}, acc_of_clf: {:1.3f}'
               .format(np.mean(loss_b_list), np.std(loss_b_list), np.mean(rec_b_list), np.std(rec_b_list),
-                      np.mean(pre_b_list), np.std(pre_b_list), np.mean(acc_b_clf)))
+                      np.mean(cost_b), np.std(cost_b), np.mean(pre_b_list), np.std(pre_b_list), np.mean(acc_b_clf)))
 
-        print('delta(REG-NB)   loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
+        print('delta(REG-NB)   loss: {:1.3f}, loss_std: {:1.3f}, recall: {:1.2f}, rec_std: {:1.3f}, '
                 'precision: {:1.3f}, precision_std: {}'.format(np.mean(delta_loss), np.std(delta_loss),
                                                                np.mean(delta_rec), np.std(delta_rec),
                       np.mean(delta_pre), np.std(delta_pre)))
@@ -249,28 +242,28 @@ if __name__ == '__main__':
         print('---------------------')
 
     #     data.append([worker_tests, worker_tests, lr, np.mean(loss_me_list), np.std(loss_me_list), 0.,
-    #                  0., 'Machines-Ensemble', np.mean(rec_me), np.std(rec_me),
+    #                  0., 'Stacking (NBayes)', np.mean(rec_me), np.std(rec_me),
     #                  np.mean(pre_me), np.std(pre_me), np.mean(f_me), np.std(f_me), machine_tests, corr,
     #                  select_conf, baseround_items, items_num, expert_cost, theta, filters_num, machine_acc_range])
     #
     #     data.append([worker_tests, worker_tests, lr, np.mean(loss_h_list), np.std(loss_h_list),
-    #                  np.mean(cost_h_list), np.std(cost_h_list), 'Hybrid-Ensemble', np.mean(rec_h),
+    #                  np.mean(cost_h_list), np.std(cost_h_list), 'Stacking (Regression)', np.mean(rec_h),
     #                  np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
     #                  machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
     #                  theta, filters_num, machine_acc_range])
     #
-    #     data.append([worker_tests, worker_tests, lr, np.mean(loss_hs_list), np.std(loss_hs_list),
-    #                  np.mean(cost_hs_list), np.std(cost_hs_list), 'Hybrid-Ensemble (Regression)', np.mean(rec_hs),
-    #                  np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
-    #                  machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
-    #                  theta, filters_num, machine_acc_range])
-    #
+    # data.append([worker_tests, worker_tests, lr, np.mean(loss), np.std(loss_hs_list),
+    #              np.mean(cost_hs_list), np.std(cost_hs_list), 'Hybrid-Ensemble (Regression)', np.mean(rec_hs),
+    #              np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
+    #              machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
+    #              theta, filters_num, machine_acc_range])
+
     # pd.DataFrame(data,
     #              columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
     #                       'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
     #                       'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
     #                       'total_items', 'expert_cost', 'theta', 'filters_num', 'machine_acc_range']
-    #              ).to_csv('../data/output_data/new/figXXX.csv', index=False)
+    #              ).to_csv('../data/output_data/new/fiiiii.csv', index=False)
 
 
 

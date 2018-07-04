@@ -16,6 +16,7 @@ class MachineEnsemble(Metrics):
         self.select_conf = params['select_conf']
         self.machines_num = params['machines_num']
         self.machine_acc_range = params['machine_acc_range']
+        self.expert_cost = params['expert_cost']
         # metrics to be computed
         self.loss = None
         self.recall = None
@@ -58,7 +59,8 @@ class MachineEnsemble(Metrics):
         self.recall = metrics[1]
         self.precision = metrics[2]
         self.f_beta = metrics[3]
-        return self.loss, self.recall, self.precision, self.f_beta, ensembled_votes, \
+        self.cost = metrics[4] * self.expert_cost / self.items_num
+        return self.loss, self.recall, self.precision, self.f_beta, ensembled_votes, self.cost, \
                [machines_accuracy, estimated_acc, self.ground_truth_tests, self.machine_test_votes, votes_list]
 
     def _get_machines(self):
