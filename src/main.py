@@ -62,9 +62,10 @@ class BestMachine(Metrics):
         self.loss = metrics[0]
         self.recall = metrics[1]
         self.precision = metrics[2]
+        self.f_b = metrics[3]
         self.cost = metrics[4] * self.expert_cost / self.items_num
 
-        return self.loss, self.recall, self.precision, self.cost
+        return self.loss, self.recall, self.precision, self.cost, self.f_b
 
 
 if __name__ == '__main__':
@@ -77,16 +78,16 @@ if __name__ == '__main__':
     select_conf = 0.95
     worker_tests = 5
     votes_per_item = 3
-    machine_tests = 100
+    machine_tests = 500
     machines_num = 10
-    machine_acc_range = [0.5, 0.8]
+    machine_acc_range = [0.5, 0.95]
     lr = 10
     expert_cost = 20
     filters_num = 4
     theta = 0.3
     filters_select = [0.14, 0.14, 0.28, 0.42]
     filters_dif = [0.9, 1., 1.1, 1.]
-    iter_num = 5
+    iter_num = 50
     data = []
 
     params = {
@@ -153,7 +154,7 @@ if __name__ == '__main__':
         cost_hs_list = []
         rec_hs, pre_hs, f_hs, f_hs = [], [], [], []
 
-        loss_b_list, rec_b_list, pre_b_list, acc_b_clf, cost_b = [], [], [], [], []
+        loss_b_list, rec_b_list, pre_b_list, acc_b_clf, cost_b, fb_b = [], [], [], [], [], []
 
         delta_loss, delta_pre, delta_rec = [], [], []
 
@@ -188,12 +189,13 @@ if __name__ == '__main__':
             cost_me.append(cost_me_)
 
             # best_machine
-            b_loss, b_rec, b_pre, b_cost_ = BestMachine(estimated_acc[0], [i[0] for i in votes_list], params).\
+            b_loss, b_rec, b_pre, b_cost_, b_fb_ = BestMachine(estimated_acc[0], [i[0] for i in votes_list], params).\
                 get_metrics()
             loss_b_list.append(b_loss)
             pre_b_list.append(b_pre)
             rec_b_list.append(b_rec)
             cost_b.append(b_cost_)
+            fb_b.append(b_fb_)
             acc_b_clf.append(estimated_acc[0])
 
             # s-run with machine prior (stacking)
@@ -204,12 +206,12 @@ if __name__ == '__main__':
             params['votes_list'] = votes_list
             # params['prior_prob_pos'] = StackingEnsemble(params).run()[4]
 
-            loss_hs, rec_hs_, pre_hs_, cost_hs_, _ = StackingEnsemble(params).run()
+            loss_hs, rec_hs_, pre_hs_, cost_hs_, f_beta_hs = StackingEnsemble(params).run()
             loss_hs_list.append(loss_hs)
             cost_hs_list.append(cost_hs_)
             rec_hs.append(rec_hs_)
             pre_hs.append(pre_hs_)
-            # f_hs.append(f_beta_hs)
+            f_hs.append(f_beta_hs)
 
         delta_loss = np.array(loss_hs_list) - np.array(loss_me_list)
         delta_rec = np.array(rec_hs) - np.array(rec_me)
@@ -234,36 +236,31 @@ if __name__ == '__main__':
                 'precision: {:1.3f}, precision_std: {}'.format(np.mean(delta_loss), np.std(delta_loss),
                                                                np.mean(delta_rec), np.std(delta_rec),
                       np.mean(delta_pre), np.std(delta_pre)))
-
-        # print('HS-RUN    loss: {:1.3f}, loss_std: {:1.3f}, ' 'recall: {:1.2f}, rec_std: {:1.3f}, '
-        #       'price: {:1.2f}, price_std: {:1.2f}, precision: {:1.3f}, f_b: {}'
-        #       .format(np.mean(loss_hs_list), np.std(loss_hs_list), np.mean(rec_hs), np.std(rec_hs),
-        #               np.mean(cost_hs_list), np.std(cost_hs_list), np.mean(pre_hs), np.mean(f_hs)))
         print('---------------------')
 
-    #     data.append([worker_tests, worker_tests, lr, np.mean(loss_me_list), np.std(loss_me_list), 0.,
-    #                  0., 'Stacking (NBayes)', np.mean(rec_me), np.std(rec_me),
-    #                  np.mean(pre_me), np.std(pre_me), np.mean(f_me), np.std(f_me), machine_tests, corr,
-    #                  select_conf, baseround_items, items_num, expert_cost, theta, filters_num, machine_acc_range])
-    #
-    #     data.append([worker_tests, worker_tests, lr, np.mean(loss_h_list), np.std(loss_h_list),
-    #                  np.mean(cost_h_list), np.std(cost_h_list), 'Stacking (Regression)', np.mean(rec_h),
-    #                  np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
-    #                  machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
-    #                  theta, filters_num, machine_acc_range])
-    #
-    # data.append([worker_tests, worker_tests, lr, np.mean(loss), np.std(loss_hs_list),
-    #              np.mean(cost_hs_list), np.std(cost_hs_list), 'Hybrid-Ensemble (Regression)', np.mean(rec_hs),
-    #              np.std(rec_h), np.mean(pre_h), np.std(pre_h), np.mean(f_h), np.std(f_h),
-    #              machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
-    #              theta, filters_num, machine_acc_range])
+        data.append([worker_tests, worker_tests, lr, np.mean(loss_me_list), np.std(loss_me_list), np.mean(cost_me),
+                     np.std(cost_me), 'Stacking (NBayes)', np.mean(rec_me), np.std(rec_me),
+                     np.mean(pre_me), np.std(pre_me), np.mean(f_me), np.std(f_me), machine_tests, corr,
+                     select_conf, baseround_items, items_num, expert_cost, theta, filters_num, machine_acc_range])
 
-    # pd.DataFrame(data,
-    #              columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
-    #                       'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
-    #                       'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
-    #                       'total_items', 'expert_cost', 'theta', 'filters_num', 'machine_acc_range']
-    #              ).to_csv('../data/output_data/new/fiiiii.csv', index=False)
+        data.append([worker_tests, worker_tests, lr, np.mean(loss_hs_list), np.std(loss_hs_list),
+                     np.mean(cost_hs_list), np.std(cost_hs_list), 'Stacking (Regression)', np.mean(rec_hs),
+                     np.std(rec_hs), np.mean(pre_hs), np.std(pre_hs), np.mean(f_hs), np.std(f_hs),
+                     machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
+                     theta, filters_num, machine_acc_range])
+
+        data.append([worker_tests, worker_tests, lr, np.mean(loss_b_list), np.std(loss_b_list),
+                     np.mean(cost_b), np.std(cost_b), '1 best machine', np.mean(rec_b_list),
+                     np.std(rec_b_list), np.mean(pre_b_list), np.std(pre_b_list), np.mean(fb_b), np.std(fb_b),
+                     machine_tests, corr, select_conf, baseround_items, items_num, expert_cost,
+                     theta, filters_num, machine_acc_range])
+
+    pd.DataFrame(data,
+                 columns=['worker_tests', 'worker_tests', 'lr', 'loss_mean', 'loss_std', 'price_mean', 'price_std',
+                          'algorithm', 'recall', 'recall_std', 'precision', 'precision_std',
+                          'f_beta', 'f_beta_std', 'machine_tests', 'corr', 'select_conf', 'baseround_items',
+                          'total_items', 'expert_cost', 'theta', 'filters_num', 'machine_acc_range']
+                 ).to_csv('../data/output_data/new/figXXX.csv', index=False)
 
 
 
