@@ -28,7 +28,7 @@ class MachineEnsemble(Metrics):
         # check number of machines passed tests
         while True:
             machines_accuracy, estimated_acc = self._get_machines()
-            if len(estimated_acc) > 2:
+            if len(estimated_acc) >= 2:
                 break
 
         votes_list = [[] for _ in range(self.items_num * self.filters_num)]
